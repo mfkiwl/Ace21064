@@ -1,0 +1,12 @@
+$ACE_PATH/rtl/Ace21064/fetch/bht.v
+$ACE_PATH/rtl/Ace21064/fetch/bob.v
+$ACE_PATH/rtl/Ace21064/fetch/bpd0.v
+$ACE_PATH/rtl/Ace21064/fetch/bpd1.v
+$ACE_PATH/rtl/Ace21064/fetch/brdec_way.v
+$ACE_PATH/rtl/Ace21064/fetch/brdec.v
+$ACE_PATH/rtl/Ace21064/fetch/btb_way.v
+$ACE_PATH/rtl/Ace21064/fetch/btb.v
+$ACE_PATH/rtl/Ace21064/fetch/pht.v
+$ACE_PATH/rtl/Ace21064/fetch/ras.v
+//$ACE_PATH/rtl/Ace21064/fetch/inst_buf.v
+$ACE_PATH/rtl/Ace21064/fetch/ace_fetch.v
