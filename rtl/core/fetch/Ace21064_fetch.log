@@ -1,2 +1,0 @@
-fetch stage2 is renamed to inst_buf.v which is placed in decode dir
-current code is draft code, not even syntax checked
