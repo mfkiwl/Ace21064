@@ -1,0 +1,11 @@
+$ACE_PATH/rtl/core/fetch/bht.v
+$ACE_PATH/rtl/core/fetch/bob.v
+$ACE_PATH/rtl/core/fetch/bpd0.v
+$ACE_PATH/rtl/core/fetch/bpd1.v
+$ACE_PATH/rtl/core/fetch/brdec_way.v
+$ACE_PATH/rtl/core/fetch/brdec.v
+$ACE_PATH/rtl/core/fetch/btb_way.v
+$ACE_PATH/rtl/core/fetch/btb.v
+$ACE_PATH/rtl/core/fetch/pht.v
+$ACE_PATH/rtl/core/fetch/ras.v
+$ACE_PATH/rtl/core/fetch/ace_fetch.v
