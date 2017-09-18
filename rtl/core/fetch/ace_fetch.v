@@ -158,7 +158,7 @@ assign branch_pc_o =  (btb_br_typ==`BR_INDIR_RAS)&btb_hit&ras_valid ? pc_ras : p
 // if we hit in the BTB and predict taken or are using the RAS, invalidate the instructions after the branch
 assign inst_valid =  btb_br_pos[2]  
                    ?(btb_br_pos[1] ? (btb_br_pos[0] ? 8'hff : 8'h7f):(btb_br_pos[0] ? 8'h3f : 8'h1f))
-                   :(btb_br_pos[1] ? (btb_br_pos[0] ? 8'h0f : 8'h07):(btb_br_pos[0] ? 8'h03 : 8'h01)):
+                   :(btb_br_pos[1] ? (btb_br_pos[0] ? 8'h0f : 8'h07):(btb_br_pos[0] ? 8'h03 : 8'h01));
 // if we hit in the BTB, invalidate the rest of the instruction bundle and redirect fetch to the instruction after the branch
 assign inst_valid_f0 = btb_hit ? inst_valid : 8'hff;
 
@@ -347,7 +347,7 @@ brdec brdec_inst(
   // generate override_pc_o
   wire [1:0] override_pc_sel;
   wire override_pc_sel = {stackaccess_btbmiss, 
-                         (brtyp_brdec2x==`BR_UNCOND) && ~btb_brdir_f1 && ~inst_invld_f1},
+                         (brtyp_brdec2x==`BR_UNCOND) && ~btb_brdir_f1 && ~inst_invld_f1};
   
   assign override_pc_o = override_pc_sel[1] ? pc_f1 : (override_pc_sel[0] ? pc_f1_t : bpd_override_pc); 
 

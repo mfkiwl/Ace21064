@@ -81,14 +81,14 @@ module bob(
          );
 
   // instantiate other modules
-  assign bob_wdata ={pc_f1_i, bob_ch_we_i, bob_ch_ud_i, bob_brdir_i, bob_lochist_i, bob_bhr_i, bob_rasptr_i} 
+  assign bob_wdata ={pc_f1_i, bob_ch_we_i, bob_ch_ud_i, bob_brdir_i, bob_lochist_i, bob_bhr_i, bob_rasptr_i};
 
-  always @(posedge clock or negedge reset_n)
+  always @ (posedge clock or negedge reset_n)
   begin
     if (reset_n == 1'b0 || flush == 1'b1) begin
-      bob_rindex  <= 'b0;
-      bob_windex  <= 'b0;
-      entry_valid <= 'b0;
+      bob_rindex  <= 4'b0000;
+      bob_windex  <= 4'b0000;
+      entry_valid <= 16'h0;
     end
     else if (bob_we)begin
       // if fetch is trying to insert an entry and we're not full
@@ -96,7 +96,7 @@ module bob(
         bob_windex <= (bob_windex + 1) % 16;
     end
     else if (bob_re) begin
-        entry_valid[bob_rindex] <= 'b0;
+        entry_valid[bob_rindex] <= 4'b0;
         bob_rindex <= (bob_rindex + 1) % 16;
     end
     else begin

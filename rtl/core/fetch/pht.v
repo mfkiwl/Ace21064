@@ -12,7 +12,6 @@
 //
 //////////////////////////////////////////////////////////////////////////////////////////
 
-`include "fetch/util.v"
 module pht(
   input  wire                     clock,
   input  wire                     reset_n,
@@ -62,6 +61,7 @@ module pht(
 //  end
 
   wire pht_cm_update[1:0] = func_pht_update(pht_cm_brdir_i, pht[pht_wt_index_i]);
+
   generate 
     for (i=0, i<32,i=i+1)
     begin

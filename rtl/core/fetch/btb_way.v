@@ -15,8 +15,6 @@
 //  Version     : v0.1 
 //
 //////////////////////////////////////////////////////////////////////////////////////////
-`include "fetch/util.v"
-
 module btb_way (
   input wire             clock,
   input wire             reset_n,
@@ -45,7 +43,7 @@ module btb_way (
   output wire            btb_hit_f1_o
 );
   integer   i;
-  localparam BTB_CNT_INIT 2'b01;
+  localparam BTB_CNT_INIT=2'b01;
 
   // these are the values stored in the BTB
   reg [0:255]           btb_valid;

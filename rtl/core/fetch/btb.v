@@ -27,9 +27,9 @@ module btb (
 
   input wire [ 1:0]        ras_ctrl_in,
   // update BTB -- retire/fetch1
-  input wire                      btb_rt_we_i;
-  input wire                      btb_rt_brdir_i;
-  input wire [63:0]               btb_rt_brpc_i;
+  input wire                      btb_rt_we_i,
+  input wire                      btb_rt_brdir_i,
+  input wire [63:0]               btb_rt_brpc_i,
 
   input wire [ 63:0]              taken_addr_in,
   // outputs

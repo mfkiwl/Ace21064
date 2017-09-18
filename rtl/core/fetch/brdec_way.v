@@ -11,7 +11,6 @@
 //  Version     : v0.1 
 //
 //////////////////////////////////////////////////////////////////////////////////////////
-`include "execute/util.def"
 
 module brdec_way(
   // inputs
@@ -20,10 +19,9 @@ module brdec_way(
   input wire [63:0]      ras_data_i,
   // outputs
   output reg             br_flag_o,
-  output reg [1:0]       br_typ_o,
+  output reg [ 1:0]      br_typ_o,
   output reg [63:0]      br_tar_o,
-  output reg [1:0]       ras_ctl_o
-
+  output reg [ 1:0]      ras_ctl_o
 );
   // internal vars
   wire [5:0]   opcode;

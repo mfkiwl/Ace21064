@@ -20,7 +20,7 @@ module brdec (
   input wire [31:0]  inst2_i,
   input wire [31:0]  inst1_i,
   input wire [31:0]  inst0_i,
-  input wire [63:0]  ras_data_i;
+  input wire [63:0]  ras_data_i,
   input wire         valid_override_i,
   // outputs
   output wire [63:0] ras_data_o,
@@ -30,7 +30,7 @@ module brdec (
   output wire [2:0]  btb_br_pos_o,
   output wire [1:0]  btb_br_typ_o,
   output wire [63:0] btb_br_tar_o,
-  output reg  [7:0]  inst_valid_o,
+  output reg  [7:0]  inst_valid_o
 );
   // internal vars
   wire [ 7:0] br_flag; // indicates this inst is an branch instruction.
