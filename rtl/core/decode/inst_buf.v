@@ -52,16 +52,11 @@ module inst_buf(
   reg [ 4:0] inst0_loc;
 
   wire [ 7:0] vld_inst_array;
-  wire [ 5:0] input_inst_num;
   wire [ 5:0] output_inst_num;
 
   // valid instruction in current instruction bundle.
   assign vld_inst_array ={inst7_vld_i,inst6_vld_i,inst5_vld_i,inst4_vld_i,
                           inst3_vld_i,inst2_vld_i,inst1_vld_i,inst0_vld_i};
-
-  // total valid instruction number in current cycle.
-  assign input_inst_num = inst7_vld_i+inst6_vld_i+inst5_vld_i+inst4_vld_i+
-                          inst3_vld_i+inst2_vld_i+inst1_vld_i+inst0_vld_i;
 
   // total ouput instruction number in current cycle.
   assign output_inst_num = (buffer_inst_num > 4) ? 4 : buffer_inst_num;
@@ -71,9 +66,9 @@ module inst_buf(
   always @ (posedge clock or negedge reset_n) 
   begin
       if(!reset_n)
-          buffer_inst_num = 6'b000000;
+          buffer_inst_num <= 6'b000000;
       else
-          buffer_inst_num = buffer_inst_num + input_inst_num - ouput_inst_num;
+          buffer_inst_num <= buffer_inst_num + 8 - ouput_inst_num;
   end
 
   // instruction buffer write pointer register
@@ -83,90 +78,88 @@ module inst_buf(
           write_ptr <= 5'b00000;
       else if (flush_i)
           write_ptr <= 5'b00000;
-      else if ((buffer_inst_num < 24) && (write_ptr < 24))
-          write_ptr <= write_ptr + input_inst_num;
-      else if ((buffer_inst_num < 24) && (write_ptr > 24))
-          write_ptr <= input_inst_num - (31 - write_ptr);
+      else if ((32-buffer_inst_num) > 8 ) 
+          if((32-write_ptr) > 8) 
+              // write pointer needn't cross boundary
+              write_ptr <= write_ptr + 8;
+          else 
+              // write pointer cross boundary
+              write_ptr <= 8 - (31 - write_ptr);
+      else 
+          // instruction buffer is almost full and can't afford new instruction bundles
+          // fetch stage should be stalled
+          write_ptr <= write_ptr;
   end
 
-  // instruction buffer write pointer register
+  // instruction buffer main entry and valid bit register.
+  // instruction buffer entry valid bit.
+  integer i;
+  always @ (posedge clock or negedge reset_n) 
+  begin : buf_valid_bit_block
+      if(!reset_n)
+        for (i=0; i<32; i++)
+          buf_entry_vld[i] <= 1'b0;
+      else if (flush_i)
+        for (i=0; i<32; i++)
+          buf_entry_vld[i] <= 1'b0;
+      else
+        for (i=0; i < 8; i++)
+          buf_entry_vld[nxt_ptr(i,write_ptr)] <= vld_inst_array[i];
+  end
+  // instruction buffer main block.
+  integer ii;
+  always @ (posedge clock) 
+  begin : buf_write_block
+    for (ii=0; ii < 8; ii++)
+    begin
+      case(ii)
+        0 : buf_entry[nxt_ptr(ii,write_ptr)] <= inst0_i; 
+        1 : buf_entry[nxt_ptr(ii,write_ptr)] <= inst1_i; 
+        2 : buf_entry[nxt_ptr(ii,write_ptr)] <= inst2_i; 
+        3 : buf_entry[nxt_ptr(ii,write_ptr)] <= inst3_i; 
+        4 : buf_entry[nxt_ptr(ii,write_ptr)] <= inst4_i; 
+        5 : buf_entry[nxt_ptr(ii,write_ptr)] <= inst5_i; 
+        6 : buf_entry[nxt_ptr(ii,write_ptr)] <= inst6_i; 
+        7 : buf_entry[nxt_ptr(ii,write_ptr)] <= inst7_i; 
+      default:;
+      endcase
+    end
+  end
+
+  // instruction buffer read pointer register
   always @ (posedge clock or negedge reset_n) 
   begin
     if(!reset_n)
       read_ptr <= 5'b00000;
     else if (flush_i)
       read_ptr <= 5'b00000;
+    else if (4 <= buffer_inst_num)
+      read_ptr <= read_ptr + 4;
     else
-      read_ptr <= read_ptr + ;
+      read_ptr <= read_ptr;
   end
 
-  // instruction buffer main entry and valid bit register.
-  integer i;
-  always @ (posedge clock or negedge reset_n) 
-  begin : buf_write_block
-      if(!reset_n)
-          for (i=0; i<32; i++)
-              buf_entry_vld[i] = 1'b0;
-      else if (flush_i)
-          for (i=0; i<32; i++)
-              buf_entry_vld[i] = 1'b0;
-      else
-      begin
-          for (i=0; i<input_inst_num; i++)
-          begin
-              if(inst0_vld_i)
-              begin
-                  buf_entry[write_ptr+i]     = inst0_i; 
-                  buf_entry_vld[write_ptr+i] = 1'b1;
-              end
-              if(inst1_vld_i)
-              begin
-                  buf_entry[write_ptr+i]     = inst1_i; 
-                  buf_entry_vld[write_ptr+i] = 1'b1;
-              end
-              if(inst2_vld_i)
-              begin
-                  buf_entry[write_ptr+i]     = inst2_i; 
-                  buf_entry_vld[write_ptr+i] = 1'b1;
-              end
-              if(inst3_vld_i)
-              begin
-                  buf_entry[write_ptr+i]     = inst3_i; 
-                  buf_entry_vld[write_ptr+i] = 1'b1;
-              end
-              if(inst4_vld_i)
-              begin
-                  buf_entry[write_ptr+i]     = inst4_i; 
-                  buf_entry_vld[write_ptr+i] = 1'b1;
-              end
-              if(inst5_vld_i)
-              begin
-                  buf_entry[write_ptr+i]     = inst5_i; 
-                  buf_entry_vld[write_ptr+i] = 1'b1;
-              end
-              if(inst6_vld_i)
-              begin
-                  buf_entry[write_ptr+i]     = inst6_i; 
-                  buf_entry_vld[write_ptr+i] = 1'b1;
-              end
-              if(inst7_vld_i)
-              begin
-                  buf_entry[write_ptr+i]     = inst7_i; 
-                  buf_entry_vld[write_ptr+i] = 1'b1;
-              end
-          end
-      end
-  end
   // instruction buffer read block
-  reg [31:0] dec_inst0;
-  reg [31:0] dec_inst1;
-  reg [31:0] dec_inst2;
-  reg [31:0] dec_inst3;
-  always @ *
-  begin
-      
-  end
+  assign buf_inst0_o = (4 <= buffer_inst_num) ?  buf_entry[nxt_ptr(0,read_ptr)] : 32'h0;
+  assign buf_inst1_o = (4 <= buffer_inst_num) ?  buf_entry[nxt_ptr(1,read_ptr)] : 32'h0;
+  assign buf_inst2_o = (4 <= buffer_inst_num) ?  buf_entry[nxt_ptr(2,read_ptr)] : 32'h0;
+  assign buf_inst3_o = (4 <= buffer_inst_num) ?  buf_entry[nxt_ptr(3,read_ptr)] : 32'h0;
 
-  assign buf_full_o = (buffer_inst_num < 24) ? 1'b0 : 1'b1; // less than 8 entry empty
+  assign buf_full_o = (buffer_inst_num < 24) ? 1'b0 : 1'b1; // less than entry entry empty
+  assign buf_empty_o= (buffer_inst_num == 0) ? 1'b1 : 1'b0;
+  ////////////////////////////////////////////////////////////////////
+  // Functions used in current module
+  //
+  // circular buffer write pointer generator
+  function [5:0] nxt_ptr;
+      input i;
+      input cur_ptr;
+      begin
+          if(cur_ptr + i < 32)
+              nxt_ptr = cur_ptr + i;
+          else
+              nxt_ptr = cur_ptr + i - 32;
+      end
+  endfunction
 
 endmodule 
