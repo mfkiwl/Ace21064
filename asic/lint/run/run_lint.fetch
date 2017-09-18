@@ -1,0 +1,7 @@
+nLint -f ../../../rtl/core/fetch/Ace21064_fetch.f \
+      -2001 \
+      -verilog \
+      -sv \
+      -lint \
+      -max_compile_error 10000 \
+      -out ../log/lint.fetch.log
