@@ -35,7 +35,7 @@ module inst_buf(
   input  wire         inst7_vld_i,
   // outputs
   output wire [31:0]  buf_inst0_o,
-  output wire [31:0]  buf_inst2_o,
+  output wire [31:0]  buf_inst1_o,
   output wire [31:0]  buf_inst2_o,
   output wire [31:0]  buf_inst3_o,
   output wire         buf_full_o,
@@ -43,13 +43,13 @@ module inst_buf(
 );
 
   // internal storage
-  reg [31:0] buf_entry [31:0];
-  reg [31:0] buf_entry_vld;
+  reg  [31:0] buf_entry [31:0];
+  reg  [31:0] buf_entry_vld;
 
-  reg [ 4:0] write_ptr;
-  reg [ 4:0] read_ptr;
+  reg  [ 4:0] write_ptr;
+  reg  [ 4:0] read_ptr;
 
-  reg [ 4:0] inst0_loc;
+  reg  [ 5:0] buffer_inst_num;
 
   wire [ 7:0] vld_inst_array;
   wire [ 5:0] output_inst_num;
@@ -62,13 +62,12 @@ module inst_buf(
   assign output_inst_num = (buffer_inst_num > 4) ? 4 : buffer_inst_num;
 
   // total instruction number in the instruction buffer.
-  reg [5:0] buffer_inst_num;
   always @ (posedge clock or negedge reset_n) 
   begin
       if(!reset_n)
           buffer_inst_num <= 6'b000000;
       else
-          buffer_inst_num <= buffer_inst_num + 8 - ouput_inst_num;
+          buffer_inst_num <= buffer_inst_num + 8 - output_inst_num;
   end
 
   // instruction buffer write pointer register
@@ -97,20 +96,20 @@ module inst_buf(
   always @ (posedge clock or negedge reset_n) 
   begin : buf_valid_bit_block
       if(!reset_n)
-        for (i=0; i<32; i++)
+        for (i=0; i<32; i=i+1)
           buf_entry_vld[i] <= 1'b0;
       else if (flush_i)
-        for (i=0; i<32; i++)
+        for (i=0; i<32; i=i+1)
           buf_entry_vld[i] <= 1'b0;
       else
-        for (i=0; i < 8; i++)
+        for (i=0; i < 8; i=i+1)
           buf_entry_vld[nxt_ptr(i,write_ptr)] <= vld_inst_array[i];
   end
   // instruction buffer main block.
   integer ii;
   always @ (posedge clock) 
   begin : buf_write_block
-    for (ii=0; ii < 8; ii++)
+    for (ii=0; ii < 8; ii=ii+1)
     begin
       case(ii)
         0 : buf_entry[nxt_ptr(ii,write_ptr)] <= inst0_i; 
@@ -152,13 +151,13 @@ module inst_buf(
   //
   // circular buffer write pointer generator
   function [5:0] nxt_ptr;
-      input i;
-      input cur_ptr;
+      input [5:0] k;
+      input [5:0] cur_ptr;
       begin
-          if(cur_ptr + i < 32)
-              nxt_ptr = cur_ptr + i;
+          if(cur_ptr + k < 32)
+              nxt_ptr = cur_ptr + k;
           else
-              nxt_ptr = cur_ptr + i - 32;
+              nxt_ptr = cur_ptr + k - 32;
       end
   endfunction
 
