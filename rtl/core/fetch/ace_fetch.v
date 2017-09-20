@@ -16,12 +16,11 @@ module ace_fetch(
   input wire                     reset_n,
   input wire [ 63:0]             pc_f0,      
   input wire [ 63:0]             pc_f1,
-  input wire [ 63:0]             pc_f2,
   // from icache for fatch1
   input wire [255:0]             inst_align_i,
   input wire                     icache_stall_i,
-  // from instruction queue
-  input wire                     inst_q_full_i,
+  // from instruction buffer (decode) 
+  input wire                     instbuf_full_i,
   // from retire stage
   input wire                     flush_rt_i,
   input wire [ 63:0]             flush_pc_rt_i,
@@ -217,7 +216,7 @@ brdec brdec_inst(
 
   // update predictors and BTB
   wire bpd_rt_we = brcond_vld_rt_r|brindir_vld_rt_r; //predictor update write
-  wire load_fetch = (~inst_q_full_i & ~bob_stall_o) | flush_rt_i;
+  wire load_fetch = (~instbuf_full_i & ~bob_stall_o) | flush_rt_i;
   assign stackaccess_btbmiss = (ras_ctrl_brdec2x != 2'b00) && ~btb_brdir_f1 && ~inst_invld_f1;
 
   // figure out what the not-taken PC is
