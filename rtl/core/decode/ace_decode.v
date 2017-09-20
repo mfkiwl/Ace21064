@@ -35,57 +35,61 @@ module ace_decode (
     input  wire         inst6_vld_i,
     input  wire         inst7_vld_i,
 
-    output wire [4:0]   inst0_rs1,
-    output wire [4:0]   inst0_rs2,
-    output wire [4:0]   inst0_rd,
-    output wire [1:0]   inst0_imm_type,
-    output wire [1:0]   inst0_src_a_sel,// select alu operands
-    output wire [1:0]   inst0_src_b_sel,
-    output wire         inst0_uses_rs1,
-    output wire         inst0_uses_rs2,
-    output wire         inst0_need_rd,
-    output wire [3:0]   inst0_alu_op,
-    output wire         inst0_rs_id,    // reservation station id
-    output wire         inst0_illegal,
+    output wire [4:0]   inst0_rs1_o,
+    output wire [4:0]   inst0_rs2_o,
+    output wire [4:0]   inst0_rd_o,
+    output wire [1:0]   inst0_imm_type_o,
+    output wire [1:0]   inst0_src_a_sel_o,// select alu operands
+    output wire [1:0]   inst0_src_b_sel_o,
+    output wire         inst0_use_rs1_o,
+    output wire         inst0_use_rs2_o,
+    output wire         inst0_need_rd_o,
+    output wire [3:0]   inst0_alu_op_o,
+    output wire         inst0_rs_id_o,    // reservation station id
+    output wire         inst0_illegal_o,
 
-    output wire [4:0]   inst1_rs1,
-    output wire [4:0]   inst1_rs2,
-    output wire [4:0]   inst1_rd,
-    output wire [1:0]   inst1_imm_type,
-    output wire [1:0]   inst1_src_a_sel,// select alu operands
-    output wire [1:0]   inst1_src_b_sel,
-    output wire         inst1_uses_rs1,
-    output wire         inst1_uses_rs2,
-    output wire         inst1_need_rd,
-    output wire [3:0]   inst1_alu_op,
-    output wire         inst1_rs_id,    // reservation station id
-    output wire         inst1_illegal,
+    output wire [4:0]   inst1_rs1_o,
+    output wire [4:0]   inst1_rs2_o,
+    output wire [4:0]   inst1_rd_o,
+    output wire [1:0]   inst1_imm_type_o,
+    output wire [1:0]   inst1_src_a_sel_o,// select alu operands
+    output wire [1:0]   inst1_src_b_sel_o,
+    output wire         inst1_use_rs1_o,
+    output wire         inst1_use_rs2_o,
+    output wire         inst1_need_rd_o,
+    output wire [3:0]   inst1_alu_op_o,
+    output wire         inst1_rs_id_o,    // reservation station id
+    output wire         inst1_illegal_o,
 
-    output wire [4:0]   inst2_rs1,
-    output wire [4:0]   inst2_rs2,
-    output wire [4:0]   inst2_rd,
-    output wire [1:0]   inst2_imm_type,
-    output wire [1:0]   inst2_src_a_sel,// select alu operands
-    output wire [1:0]   inst2_src_b_sel,
-    output wire         inst2_uses_rs1,
-    output wire         inst2_uses_rs2,
-    output wire         inst2_need_rd,
-    output wire [3:0]   inst2_alu_op,
-    output wire         inst2_rs_id,    // reservation station id
-    output wire         inst2_illegal,
+    output wire [4:0]   inst2_rs1_o,
+    output wire [4:0]   inst2_rs2_o,
+    output wire [4:0]   inst2_rd_o,
+    output wire [1:0]   inst2_imm_type_o,
+    output wire [1:0]   inst2_src_a_sel_o,// select alu operands
+    output wire [1:0]   inst2_src_b_sel_o,
+    output wire         inst2_use_rs1_o,
+    output wire         inst2_use_rs2_o,
+    output wire         inst2_need_rd_o,
+    output wire [3:0]   inst2_alu_op_o,
+    output wire         inst2_rs_id_o,    // reservation station id
+    output wire         inst2_illegal_o,
 
-    output wire [4:0]   inst3_rs1,
-    output wire [4:0]   inst3_rs2,
-    output wire [4:0]   inst3_rd,
-    output wire [1:0]   inst3_imm_type,
-    output wire [1:0]   inst3_src_a_sel,// select alu operands
-    output wire [1:0]   inst3_src_b_sel,
-    output wire         inst3_uses_rs1,
-    output wire         inst3_uses_rs2,
-    output wire         inst3_need_rd,
-    output wire [3:0]   inst3_alu_op,
-    output wire         inst3_rs_id,    // reservation station id
-    output wire         inst3_illegal
+    output wire [4:0]   inst3_rs1_o,
+    output wire [4:0]   inst3_rs2_o,
+    output wire [4:0]   inst3_rd_o,
+    output wire [1:0]   inst3_imm_type_o,
+    output wire [1:0]   inst3_src_a_sel_o,// select alu operands
+    output wire [1:0]   inst3_src_b_sel_o,
+    output wire         inst3_use_rs1_o,
+    output wire         inst3_use_rs2_o,
+    output wire         inst3_need_rd_o,
+    output wire [3:0]   inst3_alu_op_o,
+    output wire         inst3_rs_id_o,    // reservation station id
+    output wire         inst3_illegal_o,
+
+    output wire         instbuf_full_o,
+    output wire         instbuf_empty_o
+ 
 );
 
 wire [31:0]   buf_dec_inst0;
@@ -118,73 +122,73 @@ inst_buf i_inst_buf(
     .buf_inst1_o        (buf_dec_inst1      ),
     .buf_inst2_o        (buf_dec_inst2      ),
     .buf_inst3_o        (buf_dec_inst3      ),
-    .buf_full_o         (buf_full_o         ),
-    .buf_empty_o        (buf_empty_o        )
+    .buf_full_o         (instbuf_full_o     ),
+    .buf_empty_o        (instbuf_empty_o    )
 );
 
 
 decoder inst_decoder0(
-    .inst_i               (buf_dec_inst0  ),
-    .rs1_o                (inst0_rs1      ),
-    .rs2_o                (inst0_rs2      ),
-    .rd_o                 (inst0_rd       ),
-    .imm_type_o           (inst0_imm_type ),
-    .src_a_sel_o          (inst0_src_a_sel),
-    .src_b_sel_o          (inst0_src_b_sel),
-    .uses_rs1_o           (inst0_uses_rs1 ),
-    .uses_rs2_o           (inst0_uses_rs2 ),
-    .need_rd_o            (inst0_need_rd  ),
-    .alu_op_o             (inst0_alu_op   ),
-    .rs_id_o              (inst0_rs_id    ),
-    .illegal_inst_o       (inst0_illegal  )
+    .inst_i               (buf_dec_inst0    ),
+    .rs1_o                (inst0_rs1_o      ),
+    .rs2_o                (inst0_rs2_o      ),
+    .rd_o                 (inst0_rd_o       ),
+    .imm_type_o           (inst0_imm_type_o ),
+    .src_a_sel_o          (inst0_src_a_sel_o),
+    .src_b_sel_o          (inst0_src_b_sel_o),
+    .use_rs1_o            (inst0_use_rs1_o  ),
+    .use_rs2_o            (inst0_use_rs2_o  ),
+    .need_rd_o            (inst0_need_rd_o  ),
+    .alu_op_o             (inst0_alu_op_o   ),
+    .rs_id_o              (inst0_rs_id_o    ),
+    .illegal_inst_o       (inst0_illegal_o  )
 );
 
 decoder inst_decoder1(
-    .inst_i               (buf_dec_inst1  ),
-    .rs1_o                (inst1_rs1      ),
-    .rs2_o                (inst1_rs2      ),
-    .rd_o                 (inst1_rd       ),
-    .imm_type_o           (inst1_imm_type ),
-    .src_a_sel_o          (inst1_src_a_sel),
-    .src_b_sel_o          (inst1_src_b_sel),
-    .uses_rs1_o           (inst1_uses_rs1 ),
-    .uses_rs2_o           (inst1_uses_rs2 ),
-    .need_rd_o            (inst1_need_rd  ),
-    .alu_op_o             (inst1_alu_op   ),
-    .rs_id_o              (inst1_rs_id    ),
-    .illegal_inst_o       (inst1_illegal  )
+    .inst_i               (buf_dec_inst1    ),
+    .rs1_o                (inst1_rs1_o      ),
+    .rs2_o                (inst1_rs2_o      ),
+    .rd_o                 (inst1_rd_o       ),
+    .imm_type_o           (inst1_imm_type_o ),
+    .src_a_sel_o          (inst1_src_a_sel_o),
+    .src_b_sel_o          (inst1_src_b_sel_o),
+    .use_rs1_o            (inst1_use_rs1_o  ),
+    .use_rs2_o            (inst1_use_rs2_o  ),
+    .need_rd_o            (inst1_need_rd_o  ),
+    .alu_op_o             (inst1_alu_op_o   ),
+    .rs_id_o              (inst1_rs_id_o    ),
+    .illegal_inst_o       (inst1_illegal_o  )
 );
 
 decoder inst_decoder2(
-    .inst_i               (buf_dec_inst2  ),
-    .rs1_o                (inst2_rs1      ),
-    .rs2_o                (inst2_rs2      ),
-    .rd_o                 (inst2_rd       ),
-    .imm_type_o           (inst2_imm_type ),
-    .src_a_sel_o          (inst2_src_a_sel),
-    .src_b_sel_o          (inst2_src_b_sel),
-    .uses_rs1_o           (inst2_uses_rs1 ),
-    .uses_rs2_o           (inst2_uses_rs2 ),
-    .need_rd_o            (inst2_need_rd  ),
-    .alu_op_o             (inst2_alu_op   ),
-    .rs_id_o              (inst2_rs_id    ),
-    .illegal_inst_o       (inst2_illegal  )
+    .inst_i               (buf_dec_inst2    ),
+    .rs1_o                (inst2_rs1_o      ),
+    .rs2_o                (inst2_rs2_o      ),
+    .rd_o                 (inst2_rd_o       ),
+    .imm_type_o           (inst2_imm_type_o ),
+    .src_a_sel_o          (inst2_src_a_sel_o),
+    .src_b_sel_o          (inst2_src_b_sel_o),
+    .use_rs1_o            (inst2_use_rs1_o  ),
+    .use_rs2_o            (inst2_use_rs2_o  ),
+    .need_rd_o            (inst2_need_rd_o  ),
+    .alu_op_o             (inst2_alu_op_o   ),
+    .rs_id_o              (inst2_rs_id_o    ),
+    .illegal_inst_o       (inst2_illegal_o  )
 );
 
 decoder inst_decoder3(
-    .inst_i               (buf_dec_inst3  ),
-    .rs1_o                (inst3_rs1      ),
-    .rs2_o                (inst3_rs2      ),
-    .rd_o                 (inst3_rd       ),
-    .imm_type_o           (inst3_imm_type ),
-    .src_a_sel_o          (inst3_src_a_sel),
-    .src_b_sel_o          (inst3_src_b_sel),
-    .uses_rs1_o           (inst3_uses_rs1 ),
-    .uses_rs2_o           (inst3_uses_rs2 ),
-    .need_rd_o            (inst3_need_rd  ),
-    .alu_op_o             (inst3_alu_op   ),
-    .rs_id_o              (inst3_rs_id    ),
-    .illegal_inst_o       (inst3_illegal  )
+    .inst_i               (buf_dec_inst3    ),
+    .rs1_o                (inst3_rs1_o      ),
+    .rs2_o                (inst3_rs2_o      ),
+    .rd_o                 (inst3_rd_o       ),
+    .imm_type_o           (inst3_imm_type_o ),
+    .src_a_sel_o          (inst3_src_a_sel_o),
+    .src_b_sel_o          (inst3_src_b_sel_o),
+    .use_rs1_o            (inst3_use_rs1_o  ),
+    .use_rs2_o            (inst3_use_rs2_o  ),
+    .need_rd_o            (inst3_need_rd_o  ),
+    .alu_op_o             (inst3_alu_op_o   ),
+    .rs_id_o              (inst3_rs_id_o    ),
+    .illegal_inst_o       (inst3_illegal_o  )
 );
 
 endmodule

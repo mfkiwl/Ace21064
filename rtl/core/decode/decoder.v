@@ -15,16 +15,16 @@
 module decoder(
     input  wire [31:0]      inst_i,
 
-    output wire [4:0]       rs1,
-    output wire [4:0]       rs2,
-    output wire [4:0]       rd,
-    output reg  [1:0]       imm_type,
-    output reg  [1:0]       src_a_sel,// select alu operands
-    output reg  [1:0]       src_b_sel,
+    output wire [4:0]       rs1_o,
+    output wire [4:0]       rs2_o,
+    output wire [4:0]       rd_o,
+    output reg  [1:0]       imm_type_o,
+    output reg  [1:0]       src_a_sel_o,// select alu operands
+    output reg  [1:0]       src_b_sel_o,
     
-    output reg              uses_rs1,
-    output reg              uses_rs2,
-    output reg              need_rd,
+    output reg              use_rs1_o,
+    output reg              use_rs2_o,
+    output reg              need_rd_o,
     // branch_inst
     // simple_alu
     // complex_alu
@@ -34,9 +34,9 @@ module decoder(
     // uncond_br
     // indirect_br
 
-    output reg [3:0]        alu_op,
-    output reg              rs_id,             // reservation station id
-    output reg              illegal_inst
+    output reg [3:0]        alu_op_o,
+    output reg              rs_id_o,             // reservation station id
+    output reg              illegal_inst_o
 );
 
    wire [ 6:0]              opcode;
@@ -45,137 +45,137 @@ module decoder(
    wire [11:0]              funct12;
    reg  [ 3:0]              alu_op_arith;
    
-   assign opcode    = inst_i[6:0];
-   assign funct3    = inst_i[14:12];
-   assign funct7    = inst_i[31:25];
-   assign funct12   = inst_i[31:20];
-   assign rd        = inst_i[11:7];
-   assign rs1       = inst_i[19:15];
-   assign rs2       = inst_i[24:20];
+   assign opcode      = inst_i[6:0];
+   assign funct3      = inst_i[14:12];
+   assign funct7      = inst_i[31:25];
+   assign funct12     = inst_i[31:20];
+   assign rd_o        = inst_i[11:7];
+   assign rs1_o       = inst_i[19:15];
+   assign rs2_o       = inst_i[24:20];
    
    always @ *
    begin
-       rs_id               = `RS_0;
-       imm_type            = `IMM_I;
-       src_a_sel           = `SRC_A_RS1;
-       src_b_sel           = `SRC_B_IMM;
-       need_rd             = 1'b0;
-       uses_rs1            = 1'b1;
-       uses_rs2            = 1'b0;
-       alu_op              = `ALU_OP_ADD;
-       illegal_inst = 1'b0;
+       rs_id_o               = `RESERVATION_STATION0;
+       imm_type_o            = `IMM_I;
+       src_a_sel_o           = `SRC_A_RS1;
+       src_b_sel_o           = `SRC_B_IMM;
+       need_rd_o             = 1'b0;
+       use_rs1_o            = 1'b1;
+       use_rs2_o            = 1'b0;
+       alu_op_o              = `ALU_OP_ADD;
+       illegal_inst_o = 1'b0;
       
       case (opcode)
       `RV32_LOAD :   begin
-                         rs_id = `RS_1;
-                         need_rd = 1'b1;
+                         rs_id_o = `RESERVATION_STATION1;
+                         need_rd_o = 1'b1;
                      end
       `RV32_STORE :  begin
-                         rs_id = `RS_1;
-                         uses_rs2 = 1'b1;
-                         imm_type = `IMM_S;
+                         rs_id_o = `RESERVATION_STATION1;
+                         use_rs2_o = 1'b1;
+                         imm_type_o = `IMM_S;
                      end
       `RV32I_BRANCH : begin
-                         rs_id = `RS_1;
-                         uses_rs2 = 1'b1;
-                         src_b_sel = `SRC_B_RS2;
+                         rs_id_o = `RESERVATION_STATION1;
+                         use_rs2_o = 1'b1;
+                         src_b_sel_o = `SRC_B_RS2;
                          case (funct3)
-                           `RV32I_FUNCT3_BEQ  : alu_op = `ALU_OP_SEQ;
-                           `RV32I_FUNCT3_BNE  : alu_op = `ALU_OP_SNE;
-                           `RV32I_FUNCT3_BLT  : alu_op = `ALU_OP_SLT;
-                           `RV32I_FUNCT3_BLTU : alu_op = `ALU_OP_SLTU;
-                           `RV32I_FUNCT3_BGE  : alu_op = `ALU_OP_SGE;
-                           `RV32I_FUNCT3_BGEU : alu_op = `ALU_OP_SGEU;
-                           default : illegal_inst = 1'b1;
+                           `RV32I_FUNCT3_BEQ  : alu_op_o = `ALU_OP_SEQ;
+                           `RV32I_FUNCT3_BNE  : alu_op_o = `ALU_OP_SNE;
+                           `RV32I_FUNCT3_BLT  : alu_op_o = `ALU_OP_SLT;
+                           `RV32I_FUNCT3_BLTU : alu_op_o = `ALU_OP_SLTU;
+                           `RV32I_FUNCT3_BGE  : alu_op_o = `ALU_OP_SGE;
+                           `RV32I_FUNCT3_BGEU : alu_op_o = `ALU_OP_SGEU;
+                           default : illegal_inst_o = 1'b1;
                          endcase
                      end
       `RV32I_JAL :    begin
-                         rs_id = `RS_1;
-                         uses_rs1 = 1'b0;
-                         src_a_sel = `SRC_A_PC;
-                         src_b_sel = `SRC_B_FOUR;
-                         need_rd = 1'b1;
+                         rs_id_o = `RESERVATION_STATION1;
+                         use_rs1_o = 1'b0;
+                         src_a_sel_o = `SRC_A_PC;
+                         src_b_sel_o = `SRC_B_FOUR;
+                         need_rd_o = 1'b1;
                      end
       `RV32I_JALR :   begin
-                         rs_id = `RS_1;
-                         src_a_sel = `SRC_A_PC;
-                         src_b_sel = `SRC_B_FOUR;
-                         need_rd = 1'b1;
-                         illegal_inst = (funct3 != 0);
+                         rs_id_o = `RESERVATION_STATION1;
+                         src_a_sel_o = `SRC_A_PC;
+                         src_b_sel_o = `SRC_B_FOUR;
+                         need_rd_o = 1'b1;
+                         illegal_inst_o = (funct3 != 0);
                      end
 /*
       `RV32I_FENCE :
       begin
            case (funct3)
            `RV32_FUNCT3_FENCE : begin
-                   if ((inst_i[31:28] == 0) && (rs1 == 0) && (reg_to_wr_DX == 0))
+                   if ((inst_i[31:28] == 0) && (rs1_o == 0) && (reg_to_wr_DX == 0))
                      ; // most fences are no-ops
                    else
-                     illegal_inst = 1'b1;
+                     illegal_inst_o = 1'b1;
            end
            `RV32_FUNCT3_FENCE_I : begin
-           if ((inst_i[31:20] == 0) && (rs1 == 0) && (reg_to_wr_DX == 0))
+           if ((inst_i[31:20] == 0) && (rs1_o == 0) && (reg_to_wr_DX == 0))
                      fence_i = 1'b1;
            else
-                     illegal_inst = 1'b1;
+                     illegal_inst_o = 1'b1;
            end
-           default : illegal_inst = 1'b1;
+           default : illegal_inst_o = 1'b1;
            endcase
       end
 */
       `RV32_ALU_IMM: begin
-                         need_rd = 1'b1;
-                         alu_op = alu_op_arith;
+                         need_rd_o = 1'b1;
+                         alu_op_o = alu_op_arith;
                      end
       `RV32_ALU :    begin
-                         uses_rs2 = 1'b1;
-                         src_b_sel = `SRC_B_RS2;
-                         alu_op = alu_op_arith;
-                         need_rd = 1'b1;
+                         use_rs2_o = 1'b1;
+                         src_b_sel_o = `SRC_B_RS2;
+                         alu_op_o = alu_op_arith;
+                         need_rd_o = 1'b1;
                      end
     /*
         `RV32I_SYSTEM : begin
            wb_src_sel_DX = `WB_SRC_CSR;
-           need_rd = (funct3 != `RV32I_FUNCT3_PRIV);
+           need_rd_o = (funct3 != `RV32I_FUNCT3_PRIV);
            case (funct3)
              `RV32I_FUNCT3_PRIV : begin
-                if ((rs1 == 0) && (reg_to_wr_DX == 0)) begin
+                if ((rs1_o == 0) && (reg_to_wr_DX == 0)) begin
                    case (funct12)
                      `RV32I_FUNCT12_ECALL : ecall = 1'b1;
                      `RV32I_FUNCT12_EBREAK : ebreak = 1'b1;
                      `RV32I_FUNCT12_ERET : begin
                         if (prv == 0)
-                          illegal_inst = 1'b1;
+                          illegal_inst_o = 1'b1;
                         else
                           eret_unkilled = 1'b1;
                      end
-                     default : illegal_inst = 1'b1;
+                     default : illegal_inst_o = 1'b1;
                    endcase // case (funct12)
-                end // if ((rs1 == 0) && (reg_to_wr_DX == 0))
+                end // if ((rs1_o == 0) && (reg_to_wr_DX == 0))
              end // case: `RV32I_FUNCT3_PRIV
-             `RV32I_FUNCT3_CSRRW : csr_cmd = (rs1 == 0) ? `CSR_READ : `CSR_WRITE;
-             `RV32I_FUNCT3_CSRRS : csr_cmd = (rs1 == 0) ? `CSR_READ : `CSR_SET;
-             `RV32I_FUNCT3_CSRRC : csr_cmd = (rs1 == 0) ? `CSR_READ : `CSR_CLEAR;
-             `RV32I_FUNCT3_CSRRWI : csr_cmd = (rs1 == 0) ? `CSR_READ : `CSR_WRITE;
-             `RV32I_FUNCT3_CSRRSI : csr_cmd = (rs1 == 0) ? `CSR_READ : `CSR_SET;
-             `RV32I_FUNCT3_CSRRCI : csr_cmd = (rs1 == 0) ? `CSR_READ : `CSR_CLEAR;
-             default : illegal_inst = 1'b1;
+             `RV32I_FUNCT3_CSRRW : csr_cmd = (rs1_o == 0) ? `CSR_READ : `CSR_WRITE;
+             `RV32I_FUNCT3_CSRRS : csr_cmd = (rs1_o == 0) ? `CSR_READ : `CSR_SET;
+             `RV32I_FUNCT3_CSRRC : csr_cmd = (rs1_o == 0) ? `CSR_READ : `CSR_CLEAR;
+             `RV32I_FUNCT3_CSRRWI : csr_cmd = (rs1_o == 0) ? `CSR_READ : `CSR_WRITE;
+             `RV32I_FUNCT3_CSRRSI : csr_cmd = (rs1_o == 0) ? `CSR_READ : `CSR_SET;
+             `RV32I_FUNCT3_CSRRCI : csr_cmd = (rs1_o == 0) ? `CSR_READ : `CSR_CLEAR;
+             default : illegal_inst_o = 1'b1;
            endcase // case (funct3)
         end
      */
      `RV32I_AUIPC: begin
-                      uses_rs1 = 1'b0;
-                      src_a_sel = `SRC_A_PC;
-                      imm_type = `IMM_U;
-                      need_rd = 1'b1;
+                      use_rs1_o = 1'b0;
+                      src_a_sel_o = `SRC_A_PC;
+                      imm_type_o = `IMM_U;
+                      need_rd_o = 1'b1;
                    end
      `RV32I_LUI :  begin
-                      uses_rs1 = 1'b0;
-                      src_a_sel = `SRC_A_ZERO;
-                      imm_type = `IMM_U;
-                      need_rd = 1'b1;
+                      use_rs1_o = 1'b0;
+                      src_a_sel_o = `SRC_A_ZERO;
+                      imm_type_o = `IMM_U;
+                      need_rd_o = 1'b1;
                    end
-     default :     illegal_inst = 1'b1;
+     default :     illegal_inst_o = 1'b1;
      endcase
    end
 
@@ -183,7 +183,7 @@ module decoder(
    always @ *
    begin
        case (funct3)
-           `RV32I_FUNCT3_ADD_SUB : alu_op_arith = ((opcode == `RV32_OP) && (funct7[5])) ?
+           `RV32I_FUNCT3_ADD_SUB : alu_op_arith = ((opcode == `RV32_ALU) && (funct7[5])) ?
                                                   `ALU_OP_SUB : `ALU_OP_ADD;
            `RV32I_FUNCT3_SLL     : alu_op_arith = `ALU_OP_SLL;
            `RV32I_FUNCT3_SLT     : alu_op_arith = `ALU_OP_SLT;

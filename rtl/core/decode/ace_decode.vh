@@ -124,6 +124,6 @@
 `define MD_OP_MUL              2'd0
 `define MD_OP_DIV              2'd1
 `define MD_OP_REM              2'd2
-
-`define RS0                    1'b0
-`define RS1                    1'b1
+// reservation station id
+`define RESERVATION_STATION0   1'b0
+`define RESERVATION_STATION1   1'b1
