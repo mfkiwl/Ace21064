@@ -114,7 +114,7 @@ So, we update the choice predictor on (global_pred ^ local_pred) and the directi
   always @(posedge clock or posedge reset_n)
   begin
     if (!reset_n)
-      bhr = 'b0;
+      bhr <= 12'b0;
     else
       if (bpd_rt_ud_i == 1'b1 && flush)
         bhr <= { bob_bhr_r_i[10:0], bpd_rt_brdir_i };

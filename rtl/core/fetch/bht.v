@@ -33,7 +33,7 @@ module bht (
   // if the updating entry is being indexed by current pc, bypass to output.
   wire [9:0] bht_entry_tmp0 = bht[bht_rd_index_i];
 
-  always @(*)
+  always @ *
   begin : ReadBlock
     if (bht_cm_brdir_se_i && (bht_rd_index_i == bht_wt_index_i))
       br_hist_o  = {bht_entry_tmp0[8:0], bht_cm_brdir_i};

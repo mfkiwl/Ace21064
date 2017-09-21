@@ -19,7 +19,7 @@ module ras(
 //  input  wire           ras_flush, //flush signal come from retire stage
   input  wire           flush_rt_i,
   input  wire           icache_stall_i,
-  input  wire           ras_bob_valid_i,
+  input  wire           bob_vld_i,
 
 //  input  wire           ras_we,
   input  wire           invalid_f1_i,
@@ -66,15 +66,15 @@ module ras(
   always @ ( * )
   begin
       case (ras_index_sel)
-        NOAC   : ras_index_tmp = ras_index;           
-        PUSH   : ras_index_tmp = (ras_index+1)%16;
-        POP    : ras_index_tmp = (ras_index-1)%16;
-        POPU   : ras_index_tmp = ras_index;
-        NOAC   : ras_index_tmp = ras_ptr_rt_i;
-        PUSH   : ras_index_tmp = (ras_ptr_rt_i+1)%16;
-        POP    : ras_index_tmp = (ras_ptr_rt_i-1)%16;
-        POPU   : ras_index_tmp = ras_ptr_rt_i;
-        default:
+        NOAC         : ras_index_tmp = ras_index;           
+        PUSH         : ras_index_tmp = (ras_index+1)%16;
+        POP          : ras_index_tmp = (ras_index-1)%16;
+        POPU         : ras_index_tmp = ras_index;
+        FLUSH_NOAC   : ras_index_tmp = ras_ptr_rt_i;
+        FLUSH_PUSH   : ras_index_tmp = (ras_ptr_rt_i+1)%16;
+        FLUSH_POP    : ras_index_tmp = (ras_ptr_rt_i-1)%16;
+        FLUSH_POPU   : ras_index_tmp = ras_ptr_rt_i;
+        default:;
       endcase
   end
 
@@ -88,12 +88,12 @@ module ras(
     .ras_data_o  (ras_data_tmp)
   );
 
-  wire ras_ctl        = btb_rasctl_i & {2{~icache_stall_i & btb_hit_i}};
+  wire ras_ctl          = btb_rasctl_i && {2{~icache_stall_i && btb_hit_i}};
   wire ras_override     = bpd_override_i | 
                         ((btb_brtyp_i == `BR_UNCOND) && ~btb_brdir_r_i && ~invalid_f1_i) |
-                        ((ras_ctl != 2'b00) && ~btb_brdir_r && ~invalid_f1_i);
+                        ((ras_ctl != 2'b00) && ~btb_brdir_r_i && ~invalid_f1_i);
 
-  wire ras_flush        = flush_rt_i & bob_valid_o_r;
+  wire ras_flush        = flush_rt_i & bob_vld_i;
   wire ras_we           = ras_ctl[0] & ~invalid_f1_i & ~ras_override; 
 
   wire ras_index_sel    = {ras_flush,(ras_ctl && {2{~ras_override}})};

@@ -134,7 +134,7 @@ ras    ras_inst(
 //  .ras_flush_rt_i         (ras_flush),
   .flush_rt_i             (flush_rt_i),
   .invalid_f1_i           (inst_invld_f1),
-  .ras_bob_valid_i        (bob_valid_o_r),
+  .bob_vld_i              (bob_valid_o_r),
 
   .ras_data_i             (ras_data_brdec2ras),
 

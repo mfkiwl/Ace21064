@@ -1,4 +1,6 @@
 $ACE_PATH/rtl/core/fetch/ace_fetch.vh
+$ACE_PATH/rtl/core/fetch/ram_sp.v
+$ACE_PATH/rtl/core/fetch/ram_dp.v
 $ACE_PATH/rtl/core/fetch/bht.v
 $ACE_PATH/rtl/core/fetch/bob.v
 $ACE_PATH/rtl/core/fetch/bpd0.v
