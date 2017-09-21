@@ -77,8 +77,8 @@ module inst_buf(
           write_ptr <= 5'b00000;
       else if (flush_i)
           write_ptr <= 5'b00000;
-      else if ((32-buffer_inst_num) > 8 ) 
-          if((32-write_ptr) > 8) 
+      else if (24 > buffer_inst_num) 
+          if(24 > write_ptr) 
               // write pointer needn't cross boundary
               write_ptr <= write_ptr + 8;
           else 
