@@ -13,24 +13,21 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 
 module brdec_way(
-  // inputs
   input wire [31:0]      inst_i,
   input wire [63:0]      pc_f1_i,
   input wire [63:0]      ras_data_i,
-  // outputs
+
   output reg             br_flag_o,
   output reg [ 1:0]      br_typ_o,
   output reg [63:0]      br_tar_o,
   output reg [ 1:0]      ras_ctl_o
 );
-  // internal vars
   wire [5:0]   opcode;
   wire [20:0]  disp;
   wire [1:0]   jmpType;
   wire [13:0]  jmpDisp;
 
-  // assign vars
-  assign opcode  = inst_i[31:26];
+  assign opcode  = inst_i[6:0];
   assign disp    = inst_i[20:0];
   assign jmpType = inst_i[15:14];
   assign jmpDisp = inst_i[13:0];
@@ -38,7 +35,7 @@ module brdec_way(
 
   // if the instruction is not a branch, set br_flag_o to 0
   // otherwise, set br_flag_o to 1 and calculate the other values
-  always @(inst_i or pc_f1_i or ras_data_i or opcode or disp or jmpType)
+  always @ *
   begin
     case (opcode)
       // conditional branches
@@ -60,13 +57,10 @@ module brdec_way(
         else
           ras_ctl_o     = 2'b01;
       end
-      // jumps
+      // unconditional jumps
       // for JMP and JSR, the predicted target = PC + 4 * sext(disp)
       // for RET and JSR_COROUTINE, the predicted target is the top of the RAS
-      6'h1a: begin
-        case (jmpType)
-          // JMP
-          2'b00: begin
+      `RV32I_JAL: begin
             br_flag_o       = 1'b1;
             br_typ_o   = `BR_INDIR_PC;
             br_tar_o = pc_f1_i + sext16({disp[13:0],2'b0});

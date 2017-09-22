@@ -23,13 +23,13 @@ module brdec (
   input wire [63:0]  ras_data_i,
   input wire         valid_override_i,
   // outputs
-  output wire [63:0] ras_data_o,
-  output wire [ 1:0] ras_ctrl_o,
+  output reg  [63:0] ras_data_o,
+  output reg  [ 1:0] ras_ctrl_o,
   output wire        br_exist_o,
   output wire        btb_we_o,
   output wire [2:0]  btb_br_pos_o,
-  output wire [1:0]  btb_br_typ_o,
-  output wire [63:0] btb_br_tar_o,
+  output reg  [1:0]  btb_br_typ_o,
+  output reg  [63:0] btb_br_tar_o,
   output reg  [7:0]  inst_valid_o
 );
   // internal vars

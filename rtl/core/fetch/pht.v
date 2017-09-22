@@ -12,7 +12,12 @@
 //
 //////////////////////////////////////////////////////////////////////////////////////////
 
-module pht(
+module pht #(
+  parameter INDEXSIZE         = 4096,
+  parameter LOGINDEXSIZE      = 12,
+  parameter SATCNTWIDTH       = 2,
+  parameter SATCNTINIT        = 2'b10
+)(
   input  wire                     clock,
   input  wire                     reset_n,
   input  wire [LOGINDEXSIZE-1:0]  pht_rd_index_i, //prediction entry to access
@@ -22,20 +27,17 @@ module pht(
   output wire                     pht_br_pred_o  // predicted direction
 );
 
-  integer i;
-  parameter INDEXSIZE         = 4096;
-  parameter LOGINDEXSIZE      = 12;
-  parameter SATCNTWIDTH       = 2;
-  parameter SATCNTINIT        = 2'b10;
+//  integer i;
 
   reg [SATCNTWIDTH-1:0] pht [0:INDEXSIZE-1];
   reg                   br_pred_o; // predicted direction
   wire                  pht_we;
 
   wire sat_cnt_tmp[1:0] = func_pht_update(pht_cm_brdir_i, pht[pht_rd_index_i]);
-  always @( * )
+
+  always @ * 
   begin : ReadBlock
-    sat_cnt_tmp = pht[pht_rd_index_i];
+    //sat_cnt_tmp = pht[pht_rd_index_i];
     if (pht_cm_brdir_we_i)
       br_pred_o = sat_cnt_tmp[1];
     else
@@ -62,11 +64,15 @@ module pht(
 
   wire pht_cm_update[1:0] = func_pht_update(pht_cm_brdir_i, pht[pht_wt_index_i]);
 
+  genvar i;
+  genvar j;
+
   generate 
-    for (i=0, i<32,i=i+1)
+  begin
+    for (i=0; i<32; i=i+1)
     begin
-      pht_we = pht_cm_brdir_we_i & (pht_wt_index_i[9:5] == i[4:0]);
-      for (j=0, j<32, j=j+1)
+      assign pht_we = pht_cm_brdir_we_i & (pht_wt_index_i[9:5] == i[4:0]);
+      for (j=0; j<32; j=j+1)
       begin
         always @(posedge clock or negedge reset_n)
           if(!reset_n)
@@ -77,26 +83,27 @@ module pht(
                                      pht[{i[4:0],j[4:0]}]           ;
       end    
     end
+  end
   endgenerate
 
 
 
   // pht value update function
-  function func_pht_update;
+  function [1:0] func_pht_update;
     input br_dir_i;
     input cur_pht_value;
 
     begin
       case({cur_ph_value, br_dir_i})
-        { `ST,0} : pht_cm_update[1:0] = `WNT;
-        { `ST,1} : pht_cm_update[1:0] = `ST;
-        { `WT,0} : pht_cm_update[1:0] = `WNT;
-        { `WT,1} : pht_cm_update[1:0] = `ST;
-        {`WNT,0} : pht_cm_update[1:0] = `SNT;
-        {`WNT,1} : pht_cm_update[1:0] = `WT;
-        {`SNT,0} : pht_cm_update[1:0] = `SNT;
-        {`SNT,1} : pht_cm_update[1:0] = `WT;
-        default  : pht_cm_update[1:0] = 2'bxx;
+        { `ST,0} : func_pht_update[1:0] = `WNT;
+        { `ST,1} : func_pht_update[1:0] = `ST;
+        { `WT,0} : func_pht_update[1:0] = `WNT;
+        { `WT,1} : func_pht_update[1:0] = `ST;
+        {`WNT,0} : func_pht_update[1:0] = `SNT;
+        {`WNT,1} : func_pht_update[1:0] = `WT;
+        {`SNT,0} : func_pht_update[1:0] = `SNT;
+        {`SNT,1} : func_pht_update[1:0] = `WT;
+        default  : func_pht_update[1:0] = 2'bxx;
       endcase
     end
   endfunction

@@ -38,6 +38,7 @@ module bpd0 (
   wire [ 9:0]  bht_cm_index;
   wire         bht_cm_brdir;
   wire         bpd_ch_brdir;
+  wire [ 9:0]  bht_loc_hist;
 
   assign  pht_sp_index = sp_pc_i[13:2];
   assign  pht_cm_index = cm_pc_i[13:2];

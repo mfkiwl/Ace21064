@@ -21,8 +21,6 @@ module bht (
   input  wire           bht_cm_brdir_se_i, // confirmed branch direction shift in enable
   output wire [9:0]     bht_br_hist_o      // branch history output, for pht index
 );
-  genvar i;
-  genvar j;
   localparam INDEXSIZE    = 1024;
 
   wire       bht_we;
@@ -48,11 +46,14 @@ module bht (
   wire [9:0] bht_cm_update  = {bht_entry_tmp1[8:0], bht_cm_brdir_i};
   // Partition the BHT into 32 groups of 32 ten-bit registers, can only enable
   // eatch portion on a update, rather than the entire table, to reduce power.
+  genvar i;
+  genvar j;
+
   generate
-  begin : bht 
+  begin : branch_history_table 
     for(i=0; i<32; i=i+1)
     begin
-      bht_we = bht_cm_brdir_se_i && (bht_wt_index_i[9:5] == i[4:0]);
+      assign bht_we = bht_cm_brdir_se_i && (bht_wt_index_i[9:5] == i[4:0]);
       for(j=0; j<32; j=j+1)
       begin
         always @ (posedge clock or negedge reset_n)

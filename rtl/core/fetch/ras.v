@@ -54,6 +54,12 @@ module ras(
   reg  [ 3:0] ras_index;
   reg  [ 3:0] ras_index_tmp;
   wire [63:0] ras_data_tmp;
+  wire        ras_we;
+  wire        ras_index_sel;
+  wire        ras_override;
+  wire        ras_flush;
+  wire [ 1:0] ras_ctl;
+  wire [ 3:0] ras_ptr_tmp;
 
   always @(posedge clock or negedge reset_n)
   begin
@@ -88,23 +94,22 @@ module ras(
     .ras_data_o  (ras_data_tmp)
   );
 
-  wire ras_ctl          = btb_rasctl_i && {2{~icache_stall_i && btb_hit_i}};
-  wire ras_override     = bpd_override_i | 
-                        ((btb_brtyp_i == `BR_UNCOND) && ~btb_brdir_r_i && ~invalid_f1_i) |
-                        ((ras_ctl != 2'b00) && ~btb_brdir_r_i && ~invalid_f1_i);
+  assign ras_ctl          = btb_rasctl_i && {2{~icache_stall_i && btb_hit_i}};
+  assign ras_override     = bpd_override_i | 
+                          ((btb_brtyp_i == `BR_UNCOND) && ~btb_brdir_r_i && ~invalid_f1_i) |
+                          ((ras_ctl != 2'b00) && ~btb_brdir_r_i && ~invalid_f1_i);
 
-  wire ras_flush        = flush_rt_i & bob_vld_i;
-  wire ras_we           = ras_ctl[0] & ~invalid_f1_i & ~ras_override; 
+  assign ras_flush        = flush_rt_i & bob_vld_i;
+  assign ras_we           = ras_ctl[0] & ~invalid_f1_i & ~ras_override; 
 
-  wire ras_index_sel    = {ras_flush,(ras_ctl && {2{~ras_override}})};
+  assign ras_index_sel    = {ras_flush,(ras_ctl && {2{~ras_override}})};
 
-  wire ras_ptr_tmp[3:0] = ras_ctl[1] ? 
-                         (ras_ctl[0] ? ras_index   : ras_index-1):
-                         (ras_ctl[0] ? ras_index+1 : ras_index  );
+  assign ras_ptr_tmp[3:0] = ras_ctl[1] ? 
+                           (ras_ctl[0] ? ras_index   : ras_index-1):
+                           (ras_ctl[0] ? ras_index+1 : ras_index  );
 
-  assign ras_ptr_o      = ras_flush ? ras_ptr_rt_i : ras_ptr_tmp;
-  assign ras_data_o     = ras_we    ? ras_data_i   : ras_data_tmp;
-  assign ras_valid_o    = 1'b1;
-
+  assign ras_ptr_o        = ras_flush ? ras_ptr_rt_i : ras_ptr_tmp;
+  assign ras_data_o       = ras_we    ? ras_data_i   : ras_data_tmp;
+  assign ras_valid_o      = 1'b1;
 
 endmodule
