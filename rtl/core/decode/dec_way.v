@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //
-//  File Name   : decoder.v
+//  File Name   : dec_way.v
 //  Author      : ejune@aureage.com
 //                
 //  Description : 
@@ -12,7 +12,7 @@
 //
 //////////////////////////////////////////////////////////////////////////////////////////
 
-module decoder(
+module dec_way(
     input  wire [31:0]      inst_i,
 
     output wire [4:0]       rs1_o,
@@ -45,11 +45,11 @@ module decoder(
    wire [11:0]              funct12;
    reg  [ 3:0]              alu_op_arith;
    
-   assign opcode      = inst_i[6:0];
+   assign opcode      = inst_i[ 6: 0];
    assign funct3      = inst_i[14:12];
    assign funct7      = inst_i[31:25];
    assign funct12     = inst_i[31:20];
-   assign rd_o        = inst_i[11:7];
+   assign rd_o        = inst_i[11: 7];
    assign rs1_o       = inst_i[19:15];
    assign rs2_o       = inst_i[24:20];
    
@@ -66,15 +66,16 @@ module decoder(
        illegal_inst_o = 1'b0;
       
       case (opcode)
-      `RV32_LOAD :   begin
-                         rs_id_o = `RESERVATION_STATION1;
-                         need_rd_o = 1'b1;
-                     end
-      `RV32_STORE :  begin
-                         rs_id_o = `RESERVATION_STATION1;
-                         use_rs2_o = 1'b1;
-                         imm_type_o = `IMM_S;
-                     end
+      `RV32_LOAD :    begin
+                          rs_id_o = `RESERVATION_STATION1;
+                          need_rd_o = 1'b1;
+                      end
+      `RV32_STORE :   begin
+                          rs_id_o = `RESERVATION_STATION1;
+                          use_rs2_o = 1'b1;
+                          imm_type_o = `IMM_S;
+                      end
+      // conditional branches
       `RV32I_BRANCH : begin
                          rs_id_o = `RESERVATION_STATION1;
                          use_rs2_o = 1'b1;
@@ -89,14 +90,16 @@ module decoder(
                            default : illegal_inst_o = 1'b1;
                          endcase
                      end
-      `RV32I_JAL :    begin
+
+      // unconditional branches
+      `RV32I_JAL :   begin
                          rs_id_o = `RESERVATION_STATION1;
                          use_rs1_o = 1'b0;
                          src_a_sel_o = `SRC_A_PC;
                          src_b_sel_o = `SRC_B_FOUR;
                          need_rd_o = 1'b1;
                      end
-      `RV32I_JALR :   begin
+      `RV32I_JALR :  begin
                          rs_id_o = `RESERVATION_STATION1;
                          src_a_sel_o = `SRC_A_PC;
                          src_b_sel_o = `SRC_B_FOUR;

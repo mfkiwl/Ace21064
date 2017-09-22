@@ -127,7 +127,7 @@ inst_buf i_inst_buf(
 );
 
 
-decoder inst_decoder0(
+dec_way decoder_way0(
     .inst_i               (buf_dec_inst0    ),
     .rs1_o                (inst0_rs1_o      ),
     .rs2_o                (inst0_rs2_o      ),
@@ -143,7 +143,7 @@ decoder inst_decoder0(
     .illegal_inst_o       (inst0_illegal_o  )
 );
 
-decoder inst_decoder1(
+dec_way decoder_way1(
     .inst_i               (buf_dec_inst1    ),
     .rs1_o                (inst1_rs1_o      ),
     .rs2_o                (inst1_rs2_o      ),
@@ -159,7 +159,7 @@ decoder inst_decoder1(
     .illegal_inst_o       (inst1_illegal_o  )
 );
 
-decoder inst_decoder2(
+dec_way decoder_way2(
     .inst_i               (buf_dec_inst2    ),
     .rs1_o                (inst2_rs1_o      ),
     .rs2_o                (inst2_rs2_o      ),
@@ -175,7 +175,7 @@ decoder inst_decoder2(
     .illegal_inst_o       (inst2_illegal_o  )
 );
 
-decoder inst_decoder3(
+dec_way decoder_way3(
     .inst_i               (buf_dec_inst3    ),
     .rs1_o                (inst3_rs1_o      ),
     .rs2_o                (inst3_rs2_o      ),

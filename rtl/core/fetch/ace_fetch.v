@@ -71,6 +71,7 @@ module ace_fetch(
   wire [ 7:0]                     inst_vld_tmp;
   wire [ 1:0]                     override_pc_sel;
 
+  wire                            bob_stall_o;
 
   reg  [63:0]                     bob_pc_o_r;
   reg                             bob_brdir_o_r;
@@ -86,6 +87,7 @@ module ace_fetch(
   reg                             flush_rt_r;
   reg  [63:0]                     flush_pc_rt_r;
   reg                             override_vld_r;
+  wire                            override_vld;
 // pipe registers
   reg  [63:0]                     btb_br_tar_f1;
   reg  [ 3:0]                     ras_ptr_f1;
@@ -214,7 +216,7 @@ end
 // brdec instance
 //////////////////////////////////////////////////////////////////////////////////////////
 brdec brdec_inst(
-  .pc_f1              (pc_f1               ),
+  .pc_f1_i            (pc_f1               ),
   .inst0_i            (inst0_f1            ),
   .inst1_i            (inst1_f1            ),
   .inst2_i            (inst2_f1            ),

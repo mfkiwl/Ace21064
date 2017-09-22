@@ -61,7 +61,7 @@ module btb (
   reg btb_we_f1_2;
   reg btb_we_f1_3;
 
-  wire [7:0] index_f1 = btb_sp_brpc[9:2];
+  wire [7:0] index_f1 = btb_sp_brpc_i[9:2];
   wire [7:0] index_f0 = pc_f0_i[9:2];
 
   // instantiate the four ways
@@ -164,7 +164,7 @@ module btb (
       4'b0000: begin
         btb_hit_o          = 1'b0;
         btb_br_pos_o    = 3'b000;
-        btb_br_typ_o   = 4'b0000;
+        btb_br_typ_o   = 2'b00;
         btb_br_tar_o = 64'b0;
         btb_ras_ctl_o     = 2'b0;
         btb_br_dir_o   = 1'b0;
@@ -208,7 +208,7 @@ module btb (
         if (pc_f0_i != btb_sp_brpc_i)
         btb_hit_o = 1'b0;
         btb_br_pos_o = 3'b000;
-        btb_br_typ_o = 4'b0000;
+        btb_br_typ_o = 2'b00;
         btb_br_tar_o = 64'b0;
         btb_ras_ctl_o = 2'b00;
         btb_br_dir_o = 1'b0;

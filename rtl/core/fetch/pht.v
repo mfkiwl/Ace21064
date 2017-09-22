@@ -13,10 +13,11 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 
 module pht #(
-  parameter INDEXSIZE         = 4096,
-  parameter LOGINDEXSIZE      = 12,
-  parameter SATCNTWIDTH       = 2,
-  parameter SATCNTINIT        = 2'b10
+  parameter INDEX_SIZE        = 1024,
+  parameter SQRT_INDEX        = 32,
+  parameter LOG_INDEX         = 10,
+  parameter SATCNT_WIDTH      = 2,
+  parameter SATCNT_INIT       = 2'b10
 )(
   input  wire                     clock,
   input  wire                     reset_n,
@@ -26,8 +27,6 @@ module pht #(
   input  wire                     pht_cm_brdir_i, //direction of retired branch
   output wire                     pht_br_pred_o  // predicted direction
 );
-
-//  integer i;
 
   reg [SATCNTWIDTH-1:0] pht [0:INDEXSIZE-1];
   reg                   br_pred_o; // predicted direction
@@ -69,10 +68,10 @@ module pht #(
 
   generate 
   begin
-    for (i=0; i<32; i=i+1)
+    for (i=0; i<SQRT_INDEX; i=i+1)
     begin
       assign pht_we = pht_cm_brdir_we_i & (pht_wt_index_i[9:5] == i[4:0]);
-      for (j=0; j<32; j=j+1)
+      for (j=0; j<SQRT_INDEX; j=j+1)
       begin
         always @(posedge clock or negedge reset_n)
           if(!reset_n)
@@ -90,11 +89,11 @@ module pht #(
 
   // pht value update function
   function [1:0] func_pht_update;
-    input br_dir_i;
-    input cur_pht_value;
+    input       br_dir_i;
+    input [1:0] cur_pht_value;
 
     begin
-      case({cur_ph_value, br_dir_i})
+      case({cur_pht_value, br_dir_i})
         { `ST,0} : func_pht_update[1:0] = `WNT;
         { `ST,1} : func_pht_update[1:0] = `ST;
         { `WT,0} : func_pht_update[1:0] = `WNT;

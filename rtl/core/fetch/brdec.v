@@ -11,7 +11,7 @@
 //
 //////////////////////////////////////////////////////////////////////////////////////////
 module brdec (
-  input wire         pc_f1,
+  input wire [63:0]  pc_f1_i,
   input wire [31:0]  inst7_i,     // fetched instructions
   input wire [31:0]  inst6_i,
   input wire [31:0]  inst5_i,
@@ -39,14 +39,14 @@ module brdec (
   wire [63:0] ta7, ta6, ta5, ta4, ta3, ta2, ta1, ta0;
   reg  [ 2:0] br_pos;
 
-  wire pc0_i[63:0] = pc_f1 + 64'h00;
-  wire pc1_i[63:0] = pc_f1 + 64'h04;
-  wire pc2_i[63:0] = pc_f1 + 64'h08;
-  wire pc3_i[63:0] = pc_f1 + 64'h0c;
-  wire pc4_i[63:0] = pc_f1 + 64'h10;
-  wire pc5_i[63:0] = pc_f1 + 64'h14;
-  wire pc6_i[63:0] = pc_f1 + 64'h18;
-  wire pc7_i[63:0] = pc_f1 + 64'h1c;
+  wire pc0_i[63:0] = pc_f1_i + 64'h00;
+  wire pc1_i[63:0] = pc_f1_i + 64'h04;
+  wire pc2_i[63:0] = pc_f1_i + 64'h08;
+  wire pc3_i[63:0] = pc_f1_i + 64'h0c;
+  wire pc4_i[63:0] = pc_f1_i + 64'h10;
+  wire pc5_i[63:0] = pc_f1_i + 64'h14;
+  wire pc6_i[63:0] = pc_f1_i + 64'h18;
+  wire pc7_i[63:0] = pc_f1_i + 64'h1c;
 
 
   brdec_way brdec_way0(

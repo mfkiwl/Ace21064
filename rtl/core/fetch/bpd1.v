@@ -73,10 +73,11 @@ So, we update the choice predictor on (global_pred ^ local_pred) and the directi
 
   // global gshare
   pht #(
-    .INDEXSIZE         (4096 ),
-    .LOGINDEXSIZE      (12   ),
-    .SATCNTWIDTH       (2    ),
-    .SATCNTINIT        (2'b01))
+    .INDEX_SIZE        (4096 ),
+    .SQRT_INDEX        (64   ),
+    .LOG_INDEX         (12   ),
+    .SATCNT_WIDTH      (2    ),
+    .SATCNT_INIT       (2'b01))
   pht_inst1(
     .clock             (clock),
     .reset_n           (reset_n),
@@ -88,10 +89,11 @@ So, we update the choice predictor on (global_pred ^ local_pred) and the directi
   );
   // local2 predictor
   pht #(
-    .INDEXSIZE         (1024  ),
-    .LOGINDEXSIZE      (10    ),
-    .SATCNTWIDTH       (3     ),
-    .SATCNTINIT        (3'b011))
+    .INDEX_SIZE        (1024  ),
+    .SQRT_INDEX        (32   ),
+    .LOG_INDEX         (10    ),
+    .SATCNT_WIDTH      (3     ),
+    .SATCNT_INIT       (3'b011))
   pht_inst2(
     .clock             (clock),
     .reset_n           (reset_n),

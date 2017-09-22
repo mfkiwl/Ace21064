@@ -66,8 +66,8 @@ module bob(
           .LOGINDEX    (4         ),
           .INITVALUE   (0         ))
   bob_array(
-          .clk         (clock     ),
-          .reset       (reset_n   ),
+          .clock       (clock     ),
+          .reset_n     (reset_n   ),
           // read port
           .we1_in      (1'b0      ),
           .index1_in   (bob_rindex),
@@ -93,11 +93,11 @@ module bob(
     else if (bob_we)begin
       // if fetch is trying to insert an entry and we're not full
         entry_valid[bob_windex] <= 1'b1;
-        bob_windex <= (bob_windex + 1) % 16;
+        bob_windex <= (bob_windex + 1'b1) % 16;
     end
     else if (bob_re) begin
         entry_valid[bob_rindex] <= 4'b0;
-        bob_rindex <= (bob_rindex + 1) % 16;
+        bob_rindex <= (bob_rindex + 1'b1) % 16;
     end
     else begin
         entry_valid[bob_rindex] <= entry_valid[bob_rindex];
