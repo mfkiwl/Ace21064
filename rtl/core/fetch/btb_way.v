@@ -6,8 +6,9 @@
 //  Description : Branch Target Buffer
 //                Maintain a table of branch targets and other information
 //                about recently branches
-//                width 129(valid,tag,branch position,branch type,branch taken
-//                addr, 2bit counter, ras conrtol), depth 256 (2^8)
+//                width 129
+// (valid,tag,branch position,branch type,branch taken addr, 2bit counter, ras conrtol)
+//                depth 256 (2^8)
 //
 //                
 //                
