@@ -9,7 +9,6 @@
 //                width 129
 // (valid,tag,branch position,branch type,branch taken addr, 2bit counter, ras conrtol)
 //                depth 256 (2^8)
-//
 //                
 //                
 //  Create Date : original_time
@@ -28,7 +27,7 @@ module btb_way (
   input wire [63:0]     btb_sp_brpc_i,   // btb speculate pc_in from fetch1
   input wire [63:0]     btb_sp_brtar_i,  // btb speculate branch taken address
   input wire [1:0]      ras_ctl_i,
-  // update BTB -- retire/fetch1
+
   input wire            btb_rt_we_i,     // btb retire write enable
   input wire            btb_rt_brdir_i,  // btb retire branch directory
   input wire [63:0]     btb_rt_brpc_i,   // btb retire bundle pc
@@ -146,7 +145,7 @@ module btb_way (
         btb_tag[i]      <= 54'h0;
         btb_br_pos[i]   <=  3'h0;
         btb_br_typ[i]   <=  2'h0;
-        btb_br_tar[i] <= 64'h0;
+        btb_br_tar[i]   <= 64'h0;
         btb_cnt[i]      <= BTB_CNT_INIT;
         btb_ras_ctl[i]  <=  2'h0;
       end
