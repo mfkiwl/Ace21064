@@ -21,6 +21,8 @@
 `define RV32I_BRANCH      7'b1100011
 `define RV32I_JAL         7'b1101111
 `define RV32I_JALR        7'b1100111
+`define RV32_SYSTEM       7'b1110011
+
 
 `define RV32I_FUNCT3_BEQ           0
 `define RV32I_FUNCT3_BNE           1
@@ -29,4 +31,21 @@
 `define RV32I_FUNCT3_BLTU          6
 `define RV32I_FUNCT3_BGEU          7
 
+
+// SYSTEM FUNCT3 encodings
+`define RV32I_FUNCT3_PRIV          0
+`define RV32I_FUNCT3_CSRRW         1
+`define RV32I_FUNCT3_CSRRS         2
+`define RV32I_FUNCT3_CSRRC         3
+`define RV32I_FUNCT3_CSRRWI        5
+`define RV32I_FUNCT3_CSRRSI        6
+`define RV32I_FUNCT3_CSRRCI        7
+
+// PRIV FUNCT12 encodings
+`define RV32I_FUNCT12_ECALL        12'b000000000000
+`define RV32I_FUNCT12_EBREAK       12'b000000000001
+`define RV32I_FUNCT12_URET         12'b000000000010
+`define RV32I_FUNCT12_SRET         12'b000100000010
+`define RV32I_FUNCT12_MRET         12'b001100000010
+`define RV32I_FUNCT12_WFI          12'b000100000101
 

@@ -16,7 +16,7 @@ module brdec_way(
   input wire  [31:0]      inst_i,
   input wire  [63:0]      pc_f1_i,
   input wire  [63:0]      ras_data_i,
-  input wire  [63:0]      rs1_dat_i, // rs1 data ack
+  input wire  [63:0]      rs1_data_i, // rs1 data ack
 
   output reg              br_flag_o,
   output reg  [ 1:0]      br_typ_o,
@@ -33,6 +33,7 @@ module brdec_way(
 
   wire [ 6:0]   opcode;
   wire [ 2:0]   funct3;
+  wire [11:0]   funct12;
   wire [63:0]   br_offset_s;    // conditional branch signed offset
   wire [63:0]   br_offset_u;    // conditional branch unsigned offset 
   wire [63:0]   jal_offset_s;   // unconditional jump signed offset 
@@ -40,6 +41,7 @@ module brdec_way(
 
   assign opcode        = inst_i[ 6: 0];
   assign funct3        = inst_i[14:12];
+  assign funct12       = inst_i[31:20];
   assign rs1_idx_o     = inst_i[19:15];
   assign br_offset_s   = {{52{inst_i[31]}},inst_i[7],inst_i[30:25],inst_i[11:8],1'b0};
   assign br_offset_u   = {{51{1'b0}},inst_i[31],inst_i[7],inst_i[30:25],inst_i[11:8],1'b0};
@@ -92,9 +94,20 @@ module brdec_way(
         `RV32I_JALR: begin
                        br_flag_o       = 1'b1;
                        br_typ_o        = `BR_INDIR_RS;
-                       br_tar_o        = rs1_dat_i + jalr_offset_s;
-                       ras_ctl_o       = 2'b01;	// RAS: push PC
+                       br_tar_o        = rs1_data_i + jalr_offset_s;
+                       ras_ctl_o       = 2'b01;	// RAS: push PC (function call?)
                        rs1_req_o       = 1'b1;
+                     end
+        // user mode system return
+        `RV32_SYSTEM:begin
+                       if(funct3 == `RV32I_FUNCT3_PRIV && funct12 == `RV32I_FUNCT12_URET)
+                       begin
+                         br_flag_o     = 1'b1;
+                         br_typ_o      = `BR_INDIR_RAS;
+                         br_tar_o      = ras_data_i ;
+                         ras_ctl_o     = 2'b10;	// RAS: pop 
+                         rs1_req_o     = 1'b0;
+                       end
                      end
         default:     ; 
       endcase
