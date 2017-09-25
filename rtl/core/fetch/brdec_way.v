@@ -104,7 +104,7 @@ module brdec_way(
                        begin
                          br_flag_o     = 1'b1;
                          br_typ_o      = `BR_INDIR_RAS;
-                         br_tar_o      = ras_data_i ;
+                         br_tar_o      = ras_data_i;
                          ras_ctl_o     = 2'b10;	// RAS: pop 
                          rs1_req_o     = 1'b0;
                        end

@@ -13,21 +13,20 @@
 //
 //////////////////////////////////////////////////////////////////////////////////////////
 module bob(
-  // inputs
   input  wire             clock,
   input  wire             reset_n,
   input  wire             flush,
+  input  wire [63:0]      pc_f1_i,
+
   input  wire             bob_re_i,
   input  wire             bob_we_i,
-
-  input  wire [63:0]      pc_f1_i,
   input  wire             bob_brdir_i,
   input  wire             bob_ch_we_i,
   input  wire             bob_ch_ud_i,
   input  wire [ 9:0]      bob_lochist_i,
   input  wire [11:0]      bob_bhr_i,
   input  wire [ 3:0]      bob_rasptr_i,
-  // outputs
+
   output wire [63:0]      bob_pc_o,
   output wire             bob_brdir_o,
   output wire             bob_ch_we_o,
@@ -45,12 +44,10 @@ module bob(
   wire        [92:0]      bob_rdata;
   wire        [92:0]      bob_wdata;
 
-  // pointers
   reg         [ 3:0]      bob_rindex;
   reg         [ 3:0]      bob_windex;
   reg         [15:0]      entry_valid;
 
-  // assign outputs
   assign bob_pc_o         = bob_rdata[92:29];
   assign bob_ch_we_o      = bob_rdata[28];
   assign bob_ch_dir_o     = bob_rdata[27];
@@ -80,8 +77,13 @@ module bob(
           .data2_out   (          )
          );
 
-  // instantiate other modules
-  assign bob_wdata ={pc_f1_i, bob_ch_we_i, bob_ch_ud_i, bob_brdir_i, bob_lochist_i, bob_bhr_i, bob_rasptr_i};
+  assign bob_wdata ={ pc_f1_i,
+                      bob_ch_we_i,
+                      bob_ch_ud_i,
+                      bob_brdir_i,
+                      bob_lochist_i,
+                      bob_bhr_i,
+                      bob_rasptr_i };
 
   always @ (posedge clock or negedge reset_n)
   begin
@@ -106,8 +108,8 @@ module bob(
     end
   end
 
-  assign bob_we    = bob_we_i && (~(&bob_windex)); // write in valid, and bob not
-  assign bob_re    = bob_re_i && entry_valid[bob_rindex];
+  assign bob_we      = bob_we_i && (~(&bob_windex)); // write valid, and bob not full
+  assign bob_re      = bob_re_i && entry_valid[bob_rindex];
 
   assign bob_stall_o = &bob_windex;
   assign bob_valid_o = entry_valid[bob_rindex];
