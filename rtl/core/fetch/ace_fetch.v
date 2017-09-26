@@ -28,7 +28,6 @@ module ace_fetch(
   input wire                     brindir_vld_rt_i,  // indirect retired
   input wire                     brdir_rt_i,        // executed direction for this branch
 
-  // pc in fetch stage1 for instruction alignment unit
   output wire [63:0]             override_pc_o,  // override from f1 stage for pc_gen
   output wire                    override_vld_o, // override from f1 stage for pc_gen
   output wire [63:0]             branch_pc_o,    // branch target pc from f0 stage
@@ -225,11 +224,11 @@ brdec brdec_inst(
   .inst5_i            (inst5_f1            ),
   .inst6_i            (inst6_f1            ),
   .inst7_i            (inst7_f1            ),
-  .valid_override_i   (inst_invld_f1       ), // debug: is override_vld can
+  .flush_vld_i        (inst_invld_f1       ), // debug: is override_vld can
   .ras_data_i         (pc_ras              ),
   .ras_data_o         (ras_data_brdec2ras  ),
   .ras_ctrl_o         (ras_ctrl_brdec2x    ),
-  .br_exist_o         (br_exist            ),
+//  .br_exist_o         (br_exist            ),
   .btb_we_o           (btb_we_brdec2btb    ),
   .btb_br_pos_o       (btb_brpos_brdec2btb ),
   .btb_br_typ_o       (brtyp_brdec2x       ),
@@ -237,6 +236,7 @@ brdec brdec_inst(
   .inst_valid_o       (inst_vld_brdec[7:0] )
 );
 
+  wire br_exist = btb_we_brdec2btb; // if btb_we is enabled so there must be one branch
   assign inst_invld_f1 = ~load_fetch      | 
                           icache_stall_f1 |
                           flush_rt_i      |

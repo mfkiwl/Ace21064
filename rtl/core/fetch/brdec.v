@@ -21,11 +21,11 @@ module brdec (
   input wire [31:0]  inst1_i,
   input wire [31:0]  inst0_i,
   input wire [63:0]  ras_data_i,
-  input wire         valid_override_i,
+  input wire         flush_vld_i,
   // outputs
   output reg  [63:0] ras_data_o,
   output reg  [ 1:0] ras_ctrl_o,
-  output wire        br_exist_o,
+//  output wire        br_exist_o, // use btb_we_o to replace
   output wire        btb_we_o,
   output wire [2:0]  btb_br_pos_o,
   output reg  [1:0]  btb_br_typ_o,
@@ -150,7 +150,7 @@ module brdec (
 
   always @ (*)
   begin
-    casez ({valid_override_i,br_flag})   // only one branch instruction is permitted in one fetch bundle
+    casez ({flush_vld_i,br_flag})   // only one branch instruction is permitted in one fetch bundle
       9'b1???????? : begin 
                        br_pos       = 3'b000;
                        inst_valid_o = 8'b00000000;
@@ -251,8 +251,8 @@ module brdec (
     endcase
   end
 
-  assign btb_we_o     = |br_flag && !valid_override_i;
-  assign br_exist_o   = |br_flag & ~valid_override_i;
+  assign btb_we_o     = |br_flag && !flush_vld_i;
+//  assign br_exist_o   = |br_flag && !flush_vld_i;
   assign btb_br_pos_o = br_pos;
 
 endmodule
