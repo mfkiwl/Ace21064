@@ -13,7 +13,7 @@
 //  Version     : v0.1 
 //
 //////////////////////////////////////////////////////////////////////////////////////////
-module bpd0 (
+module bpd0(
   input wire                     clock,
   input wire                     reset_n,
   input wire                     load_fetch_i,

@@ -88,6 +88,7 @@ So, we update the choice predictor on (global_pred ^ local_pred) and the directi
     .pht_br_pred_o     (global_pred)
   );
   // local2 predictor
+  // choise pht
   pht #(
     .INDEX_SIZE        (1024  ),
     .SQRT_INDEX        (32   ),
