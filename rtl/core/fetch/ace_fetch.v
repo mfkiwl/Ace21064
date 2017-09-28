@@ -155,9 +155,9 @@ ras    ras_inst(
 );
 
 //////////////////////////////////////////////////////////////////////////////////////////
-// BPD1 instance
+// BPD0 instance
 //////////////////////////////////////////////////////////////////////////////////////////
-bpd1 bpd1_inst(
+bpd0 bpd0_inst(
   .clock                  (clock),
   .reset_n                (reset_n),
   .load_fetch_i           (load_fetch),
@@ -270,7 +270,7 @@ brdec brdec_inst(
 
   wire bpd_condbr_flag = (brtyp_brdec2x==`BR_COND)&br_exist&~inst_invld_f1;
   // tournament predictor
-  bpd0 bpd0_inst(
+  bpd1 bpd1_inst(
     .clock                 (clock),
     .reset_n               (reset_n),
     .pc_f1_i               (pc_f1),

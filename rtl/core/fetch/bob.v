@@ -4,9 +4,12 @@
 //  Author      : ejune@aureage.com
 //                
 //  Description : Branch Ordering Buffer
+//                bob is used to prevent the shadow state from advancing
+//                beyond a branch instruction until commitment of the branch
+//                instruction
+//
 //                width 93, depth 16, Keeps CPU status for misprediction
 //                recovery
-//                
 //                
 //  Create Date : original_time
 //  Version     : v0.1 
