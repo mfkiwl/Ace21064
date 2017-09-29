@@ -70,6 +70,7 @@ module ace_fetch(
   wire [ 7:0]                     inst_vld_tmp;
   wire [ 1:0]                     override_pc_sel;
 
+  wire                            pipe_ctrl_fetch;
   wire                            bob_stall_o;
 
   reg  [63:0]                     bob_pc_o_r;
@@ -155,20 +156,50 @@ ras    ras_inst(
 );
 
 //////////////////////////////////////////////////////////////////////////////////////////
-// BPD0 instance
+// BPD instance
 //////////////////////////////////////////////////////////////////////////////////////////
-bpd0 bpd0_inst(
-  .clock                  (clock),
-  .reset_n                (reset_n),
-  .load_fetch_i           (load_fetch),
-  .bpd_rt_we_i            (bpd_rt_we),
-  .bpd_rt_brdir_i         (brdir_rt_r),
-  .bpd_ch_we_i            (bob_chwe_o_r),
-  .bpd_ch_brdir_i         (bob_chdir_o_r),
-  .sp_pc_i                (pc_f0),
-  .cm_pc_i                (bob_pc_o_r),
-  .bpd_pht_choice_f1      (bpd_pht_choice_f1),
-  .bpd_bht_lochist_f1     (bpd_bht_lochist_f1)
+//bpd0 bpd0_inst(
+//  .clock                  (clock),
+//  .reset_n                (reset_n),
+//  .pipe_ctrl_fetch_i      (pipe_ctrl_fetch),
+//  .bpd_rt_we_i            (bpd_rt_we),
+//  .bpd_rt_brdir_i         (brdir_rt_r),
+//  .bpd_ch_we_i            (bob_chwe_o_r),
+//  .bpd_ch_brdir_i         (bob_chdir_o_r),
+//  .sp_pc_i                (pc_f0),
+//  .cm_pc_i                (bob_pc_o_r),
+//  .bpd_pht_choice_f1      (bpd_pht_choice_f1),
+//  .bpd_bht_lochist_f1     (bpd_bht_lochist_f1)
+//);
+
+bpd bpd_inst(
+  .clock                 (clock                 ),
+  .reset_n               (reset_n               ),
+  .pc_f0_i               (pc_f0                 ),
+  .pc_f1_i               (pc_f1                 ),
+  .bob_pc_r_i            (bob_pc_o_r            ),
+  .flush                 (flush_rt_r            ),
+  .pc_f1_t_i             (pc_f1_t               ),
+  .pc_f1_nt_i            (pc_f1_nt              ),
+  .pipe_ctrl_fetch_i     (pipe_ctrl_fetch       ),
+  .btb_brdir_f1_i        (btb_brdir_f1),
+  .bpd_condbr_flag       (bpd_condbr_flag),
+  .bob_lochist_i         (bob_lochist_o_r),
+  .bob_bhr_r_i           (bob_bhr_o_r),
+  .bob_valid_r_i         (bob_valid_o_r),
+  .bpd_condbr_i          (bpd_condbr_flag),
+  .bpd_rt_we_i           (bpd_rt_we),
+  .bpd_rt_update_i       (brcond_vld_rt_r),
+  .bpd_rt_brdir_i        (brdir_rt_r),
+  .bpd_ch_we_i           (bob_chwe_o_r),
+  .bpd_ch_brdir_i        (bob_chdir_o_r),
+  .bpd_final_pred_o      (brdir_bpd2bob),
+  .bpd_ch_we_o           (ch_we_bpd2bob),
+  .bpd_ch_ud_o           (ch_ud_bpd2bob),
+  .bpd_bhr_o             (bpd1_bhr_bpd2bob),
+  .bpd_override_o        (bpd1_override),
+  .bpd_override_pc_o     (bpd_override_pc),
+  .bpd_bht_lochist_f1    (bpd_bht_lochist_f1)
 );
 
 
@@ -202,7 +233,7 @@ begin
     ras_ptr_f1       <=  4'b0; 
     icache_stall_f1  <=  1'b0;
   end
-  else if (load_fetch) begin
+  else if (pipe_ctrl_fetch) begin
     btb_br_tar_f1    <= btb_br_tar_f0;
     btb_brdir_f1     <= btb_br_dir_f0;
     inst_vld_f1      <= inst_vld_f0;
@@ -237,7 +268,7 @@ brdec brdec_inst(
 );
 
   wire br_exist = btb_we_brdec2btb; // if btb_we is enabled so there must be one branch
-  assign inst_invld_f1 = ~load_fetch      | 
+  assign inst_invld_f1 = ~pipe_ctrl_fetch      | 
                           icache_stall_f1 |
                           flush_rt_i      |
                           flush_rt_r      |
@@ -246,7 +277,7 @@ brdec brdec_inst(
 
   // update predictors and BTB
   wire bpd_rt_we = brcond_vld_rt_r || brindir_vld_rt_r; //predictor update write
-  wire load_fetch = (~instbuf_full_i & ~bob_stall_o) | flush_rt_i;
+  assign pipe_ctrl_fetch = (~instbuf_full_i & ~bob_stall_o) | flush_rt_i;
   assign stackaccess_btbmiss = (ras_ctrl_brdec2x != 2'b00) && ~btb_brdir_f1 && ~inst_invld_f1;
 
   // figure out what the not-taken PC is
@@ -269,35 +300,35 @@ brdec brdec_inst(
 
 
   wire bpd_condbr_flag = (brtyp_brdec2x==`BR_COND)&br_exist&~inst_invld_f1;
-  // tournament predictor
-  bpd1 bpd1_inst(
-    .clock                 (clock),
-    .reset_n               (reset_n),
-    .pc_f1_i               (pc_f1),
-    .flush                 (flush_rt_r),
-    .bpd_chdir_i           (bpd_pht_choice_f1),
-    .bpd_lochist_i         (bpd_bht_lochist_f1),
-    .btb_brdir_i           (btb_brdir_f1),
-    .cond_br_i             (bpd_condbr_flag),
-    .pc_f1_nt_i            (pc_f1_nt),
-    .pc_f1_t_i             (pc_f1_t),
-    .bpd_rt_ud_i           (brcond_vld_rt_r),
-    .bpd_rt_brdir_i        (brdir_rt_r),
-
-    .pdir_in               (bob_brdir_o_r), //not used
-
-    .bob_lochist_i         (bob_lochist_o_r),
-    .bob_pc_r_i            (bob_pc_o_r),
-    .bob_bhr_r_i           (bob_bhr_o_r),
-    .bob_valid_r_i         (bob_valid_o_r),
-
-    .bpd_final_pred_o      (brdir_bpd2bob),
-    .bpd_ch_we_o           (ch_we_bpd2bob),
-    .bpd_ch_ud_o           (ch_ud_bpd2bob),
-    .bpd_bhr_o             (bpd1_bhr_bpd2bob),
-    .bpd_override_o        (bpd1_override),
-    .bpd_override_pc_o     (bpd_override_pc)
-  );
+//  // tournament predictor
+//  bpd1 bpd1_inst(
+//    .clock                 (clock),
+//    .reset_n               (reset_n),
+//    .pc_f1_i               (pc_f1),
+//    .flush                 (flush_rt_r),
+//    .bpd_chdir_i           (bpd_pht_choice_f1),
+//    .bpd_lochist_i         (bpd_bht_lochist_f1),
+//    .btb_brdir_i           (btb_brdir_f1),
+//    .cond_br_i             (bpd_condbr_flag),
+//    .pc_f1_nt_i            (pc_f1_nt),
+//    .pc_f1_t_i             (pc_f1_t),
+//    .bpd_rt_ud_i           (brcond_vld_rt_r),
+//    .bpd_rt_brdir_i        (brdir_rt_r),
+//
+//    .pdir_in               (bob_brdir_o_r), //not used
+//
+//    .bob_lochist_i         (bob_lochist_o_r),
+//    .bob_pc_r_i            (bob_pc_o_r),
+//    .bob_bhr_r_i           (bob_bhr_o_r),
+//    .bob_valid_r_i         (bob_valid_o_r),
+//
+//    .bpd_final_pred_o      (brdir_bpd2bob),
+//    .bpd_ch_we_o           (ch_we_bpd2bob),
+//    .bpd_ch_ud_o           (ch_ud_bpd2bob),
+//    .bpd_bhr_o             (bpd1_bhr_bpd2bob),
+//    .bpd_override_o        (bpd1_override),
+//    .bpd_override_pc_o     (bpd_override_pc)
+//  );
 
 
   wire bob_re = brcond_vld_rt_i|brindir_vld_rt_i;
@@ -429,7 +460,7 @@ begin
     inst6_d0_o        <= 32'h0;
     inst7_d0_o        <= 32'h0;
   end
-  else if (load_fetch) begin
+  else if (pipe_ctrl_fetch) begin
     inst0_vld_d0_o    <= inst0_vld_f1;
     inst1_vld_d0_o    <= inst1_vld_f1;
     inst2_vld_d0_o    <= inst2_vld_f1;

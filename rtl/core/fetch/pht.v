@@ -19,18 +19,18 @@ module pht #(
   parameter SATCNT_WIDTH      = 2,
   parameter SATCNT_INIT       = 2'b10
 )(
-  input  wire                     clock,
-  input  wire                     reset_n,
-  input  wire [LOGINDEXSIZE-1:0]  pht_rd_index_i, //prediction entry to access
-  input  wire [LOGINDEXSIZE-1:0]  pht_wt_index_i, // prediction entry to update
-  input  wire                     pht_cm_brdir_we_i, //if we need to update a prediction entry
-  input  wire                     pht_cm_brdir_i, //direction of retired branch
-  output wire                     pht_br_pred_o  // predicted direction
+  input  wire                  clock,
+  input  wire                  reset_n,
+  input  wire [LOG_INDEX-1:0]  pht_rd_index_i, //prediction entry to access
+  input  wire [LOG_INDEX-1:0]  pht_wt_index_i, // prediction entry to update
+  input  wire                  pht_cm_brdir_we_i, //if we need to update a prediction entry
+  input  wire                  pht_cm_brdir_i, //direction of retired branch
+  output wire                  pht_br_pred_o  // predicted direction
 );
 
-  reg [SATCNTWIDTH-1:0] pht [0:INDEXSIZE-1];
-  reg                   br_pred_o; // predicted direction
-  wire                  pht_we;
+  reg [SATCNT_WIDTH-1:0] pht [0:INDEX_SIZE-1];
+  reg                    br_pred_o; // predicted direction
+  wire                   pht_we;
 
   wire sat_cnt_tmp[1:0] = func_pht_update(pht_cm_brdir_i, pht[pht_rd_index_i]);
 
@@ -75,7 +75,7 @@ module pht #(
       begin
         always @(posedge clock or negedge reset_n)
           if(!reset_n)
-            pht[{i[4:0],j[4:0]}] <= SATCNTINIT;
+            pht[{i[4:0],j[4:0]}] <= SATCNT_INIT;
           else if (pht_we)
             pht[{i[4:0],j[4:0]}] <= (pht_wt_index_i[9:0] == j[4:0]) ?
                                     (pht_cm_update[1:0])            :
