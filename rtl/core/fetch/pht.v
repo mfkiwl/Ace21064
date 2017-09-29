@@ -23,8 +23,8 @@ module pht #(
   input  wire                  reset_n,
   input  wire [LOG_INDEX-1:0]  pht_rd_index_i, //prediction entry to access
   input  wire [LOG_INDEX-1:0]  pht_wt_index_i, // prediction entry to update
-  input  wire                  pht_cm_brdir_we_i, //if we need to update a prediction entry
-  input  wire                  pht_cm_brdir_i, //direction of retired branch
+  input  wire                  pht_brdir_we_i, //if we need to update a prediction entry
+  input  wire                  pht_brdir_i, //direction of retired branch
   output wire                  pht_br_pred_o  // predicted direction
 );
 
@@ -32,12 +32,12 @@ module pht #(
   reg                    br_pred_o; // predicted direction
   wire                   pht_we;
 
-  wire sat_cnt_tmp[1:0] = func_pht_update(pht_cm_brdir_i, pht[pht_rd_index_i]);
+  wire sat_cnt_tmp[1:0] = func_pht_update(pht_brdir_i, pht[pht_rd_index_i]);
 
   always @ * 
   begin : ReadBlock
     //sat_cnt_tmp = pht[pht_rd_index_i];
-    if (pht_cm_brdir_we_i)
+    if (pht_brdir_we_i)
       br_pred_o = sat_cnt_tmp[1];
     else
       br_pred_o = sat_cnt_tmp[1];	// MSB of counter
@@ -52,16 +52,16 @@ module pht #(
 //      for (i=0 ; i<INDEXSIZE ; i=i+1)
 //        pht[i] = SATCNTINIT;
 //    else
-//      if (pht_cm_bridr_i & pht_cm_brdir_we_i)
+//      if (pht_cm_bridr_i & pht_brdir_we_i)
 //        pht[pht_wt_index_i] <= incs(pht[pht_wt_index_i]);
-//      else if (pht_cm_brdir_we_i)
+//      else if (pht_brdir_we_i)
 //        pht[pht_wt_index_i] <= decs(pht[pht_wt_index_i]);
 //      else
 //        pht[pht_wt_index_i] <= pht[pht_wt_index_i];
 //
 //  end
 
-  wire pht_cm_update[1:0] = func_pht_update(pht_cm_brdir_i, pht[pht_wt_index_i]);
+  wire pht_update[1:0] = func_pht_update(pht_brdir_i, pht[pht_wt_index_i]);
 
   genvar i;
   genvar j;
@@ -70,7 +70,7 @@ module pht #(
   begin
     for (i=0; i<SQRT_INDEX; i=i+1)
     begin
-      assign pht_we = pht_cm_brdir_we_i & (pht_wt_index_i[9:5] == i[4:0]);
+      assign pht_we = pht_brdir_we_i & (pht_wt_index_i[9:5] == i[4:0]);
       for (j=0; j<SQRT_INDEX; j=j+1)
       begin
         always @(posedge clock or negedge reset_n)
@@ -78,7 +78,7 @@ module pht #(
             pht[{i[4:0],j[4:0]}] <= SATCNT_INIT;
           else if (pht_we)
             pht[{i[4:0],j[4:0]}] <= (pht_wt_index_i[9:0] == j[4:0]) ?
-                                    (pht_cm_update[1:0])            :
+                                    (pht_update[1:0])            :
                                      pht[{i[4:0],j[4:0]}]           ;
       end    
     end

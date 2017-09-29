@@ -48,14 +48,6 @@ module ace_fetch(
   output reg [31:0]              inst5_d0_o,
   output reg [31:0]              inst6_d0_o,
   output reg [31:0]              inst7_d0_o
-//  output reg [63:0]              inst0_pc_f1_r,
-//  output reg [63:0]              inst1_pc_f1_r,
-//  output reg [63:0]              inst2_pc_f1_r,
-//  output reg [63:0]              inst3_pc_f1_r,
-//  output reg [63:0]              inst4_pc_f1_r,
-//  output reg [63:0]              inst5_pc_f1_r,
-//  output reg [63:0]              inst6_pc_f1_r,
-//  output reg [63:0]              inst7_pc_f1_r
 );
 
   wire                            btb_hit;
@@ -70,7 +62,7 @@ module ace_fetch(
   wire [ 7:0]                     inst_vld_tmp;
   wire [ 1:0]                     override_pc_sel;
 
-  wire                            pipe_ctrl_fetch;
+  wire                            pipctl_fill_f1_i;
   wire                            bob_stall_o;
 
   reg  [63:0]                     bob_pc_o_r;
@@ -98,9 +90,7 @@ module ace_fetch(
   wire [63:0]                     pc_f1_t;
 
 
-//////////////////////////////////////////////////////////////////////////////////////////
 // BTB instance
-//////////////////////////////////////////////////////////////////////////////////////////
 btb    btb_inst(
   .clock                  (clock),
   .reset_n                (reset_n),
@@ -127,9 +117,7 @@ btb    btb_inst(
   .btb_br_dir_o           (btb_br_dir_f0)
 );
 
-//////////////////////////////////////////////////////////////////////////////////////////
 // RAS instance
-//////////////////////////////////////////////////////////////////////////////////////////
 ras    ras_inst(
   .clock                  (clock),
   .reset_n                (reset_n),
@@ -155,51 +143,39 @@ ras    ras_inst(
   .ras_ptr_o              (ras_ptr_f0        )
 );
 
-//////////////////////////////////////////////////////////////////////////////////////////
 // BPD instance
-//////////////////////////////////////////////////////////////////////////////////////////
-//bpd0 bpd0_inst(
-//  .clock                  (clock),
-//  .reset_n                (reset_n),
-//  .pipe_ctrl_fetch_i      (pipe_ctrl_fetch),
-//  .bpd_rt_we_i            (bpd_rt_we),
-//  .bpd_rt_brdir_i         (brdir_rt_r),
-//  .bpd_ch_we_i            (bob_chwe_o_r),
-//  .bpd_ch_brdir_i         (bob_chdir_o_r),
-//  .sp_pc_i                (pc_f0),
-//  .cm_pc_i                (bob_pc_o_r),
-//  .bpd_pht_choice_f1      (bpd_pht_choice_f1),
-//  .bpd_bht_lochist_f1     (bpd_bht_lochist_f1)
-//);
-
 bpd bpd_inst(
   .clock                 (clock                 ),
   .reset_n               (reset_n               ),
   .pc_f0_i               (pc_f0                 ),
   .pc_f1_i               (pc_f1                 ),
-  .bob_pc_r_i            (bob_pc_o_r            ),
-  .flush                 (flush_rt_r            ),
   .pc_f1_t_i             (pc_f1_t               ),
   .pc_f1_nt_i            (pc_f1_nt              ),
-  .pipe_ctrl_fetch_i     (pipe_ctrl_fetch       ),
-  .btb_brdir_f1_i        (btb_brdir_f1),
-  .bpd_condbr_flag       (bpd_condbr_flag),
-  .bob_lochist_i         (bob_lochist_o_r),
-  .bob_bhr_r_i           (bob_bhr_o_r),
-  .bob_valid_r_i         (bob_valid_o_r),
+  .pipctl_flush_rt_i     (flush_rt_r            ),
+  .pipctl_fill_f1_i      (pipctl_fill_f1_i       ),
+
   .bpd_condbr_i          (bpd_condbr_flag),
-  .bpd_rt_we_i           (bpd_rt_we),
-  .bpd_rt_update_i       (brcond_vld_rt_r),
-  .bpd_rt_brdir_i        (brdir_rt_r),
+  .btb_brdir_f1_i        (btb_brdir_f1),
+
+  .brcond_vld_rt_i       (brcond_vld_rt_r ),
+  .brindir_vld_rt_i      (brindir_vld_rt_r),
+  .brdir_rt_i            (brdir_rt_r),
+
+  .bob_pc_r_i            (bob_pc_o_r            ),
+  .bob_valid_r_i         (bob_valid_o_r),
   .bpd_ch_we_i           (bob_chwe_o_r),
   .bpd_ch_brdir_i        (bob_chdir_o_r),
-  .bpd_final_pred_o      (brdir_bpd2bob),
+  .bob_bhr_r_i           (bob_bhr_o_r),
+  .bob_lochist_i         (bob_lochist_o_r),
+
   .bpd_ch_we_o           (ch_we_bpd2bob),
-  .bpd_ch_ud_o           (ch_ud_bpd2bob),
+  .bpd_ch_brdir_o        (ch_ud_bpd2bob),
   .bpd_bhr_o             (bpd1_bhr_bpd2bob),
+  .bpd_bht_o             (bpd_bht_lochist_f1),
+
+  .bpd_final_pred_o      (brdir_bpd2bob),
   .bpd_override_o        (bpd1_override),
-  .bpd_override_pc_o     (bpd_override_pc),
-  .bpd_bht_lochist_f1    (bpd_bht_lochist_f1)
+  .bpd_override_pc_o     (bpd_override_pc)
 );
 
 
@@ -221,9 +197,7 @@ assign inst_valid =  btb_br_pos[2]
 // if we hit in the BTB, invalidate the rest of the instruction bundle and redirect fetch to the instruction after the branch
 assign inst_vld_f0 = btb_hit ? inst_valid : 8'hff;
 
-//////////////////////////////////////////////////////////////////////////////////////////
 // pipeline registers between fetch stage0 and fetch stage1
-//////////////////////////////////////////////////////////////////////////////////////////
 always @ (posedge clock or negedge reset_n)
 begin
   if (!reset_n) begin
@@ -233,7 +207,7 @@ begin
     ras_ptr_f1       <=  4'b0; 
     icache_stall_f1  <=  1'b0;
   end
-  else if (pipe_ctrl_fetch) begin
+  else if (pipctl_fill_f1_i) begin
     btb_br_tar_f1    <= btb_br_tar_f0;
     btb_brdir_f1     <= btb_br_dir_f0;
     inst_vld_f1      <= inst_vld_f0;
@@ -242,9 +216,7 @@ begin
   end
 end
 
-//////////////////////////////////////////////////////////////////////////////////////////
 // brdec instance
-//////////////////////////////////////////////////////////////////////////////////////////
 brdec brdec_inst(
   .pc_f1_i            (pc_f1               ),
   .inst0_i            (inst0_f1            ),
@@ -267,8 +239,36 @@ brdec brdec_inst(
   .inst_valid_o       (inst_vld_brdec[7:0] )
 );
 
+bob bob_inst(
+  .clock              (clock),
+  .reset_n            (reset_n),
+  .flush              (flush_rt_i),
+  .bob_re_i           (bob_re),
+  .bob_we_i           (bob_we),
+
+  .pc_f1_i            (pc_f1),
+  .bob_brdir_i        (brdir_bpd2bob),
+  .bob_ch_we_i        (ch_we_bpd2bob),
+  .bob_ch_ud_i        (ch_ud_bpd2bob),
+  .bob_lochist_i      (bpd_bht_lochist_f1),
+  .bob_bhr_i          (bpd1_bhr_bpd2bob),
+  .bob_rasptr_i       (ras_ptr_f1),
+
+  .bob_pc_o           (bob_pc_o),
+  .bob_brdir_o        (bob_brdir_o),
+  .bob_ch_we_o        (bob_chwe_o),
+  .bob_ch_dir_o       (bob_chdir_o),
+  .bob_lochist_o      (bob_lochist_o),
+  .bob_bhr_o          (bob_bhr_o),
+  .bob_rasptr_o       (bob_rasptr_o),
+
+  .bob_valid_o        (bob_valid_o),
+  .bob_stall_o        (bob_stall_o)
+);
+
+
   wire br_exist = btb_we_brdec2btb; // if btb_we is enabled so there must be one branch
-  assign inst_invld_f1 = ~pipe_ctrl_fetch      | 
+  assign inst_invld_f1 = ~pipctl_fill_f1_i      | 
                           icache_stall_f1 |
                           flush_rt_i      |
                           flush_rt_r      |
@@ -276,8 +276,7 @@ brdec brdec_inst(
                           bob_stall_o     ;
 
   // update predictors and BTB
-  wire bpd_rt_we = brcond_vld_rt_r || brindir_vld_rt_r; //predictor update write
-  assign pipe_ctrl_fetch = (~instbuf_full_i & ~bob_stall_o) | flush_rt_i;
+  assign pipctl_fill_f1_i = (~instbuf_full_i & ~bob_stall_o) | flush_rt_i;
   assign stackaccess_btbmiss = (ras_ctrl_brdec2x != 2'b00) && ~btb_brdir_f1 && ~inst_invld_f1;
 
   // figure out what the not-taken PC is
@@ -300,36 +299,6 @@ brdec brdec_inst(
 
 
   wire bpd_condbr_flag = (brtyp_brdec2x==`BR_COND)&br_exist&~inst_invld_f1;
-//  // tournament predictor
-//  bpd1 bpd1_inst(
-//    .clock                 (clock),
-//    .reset_n               (reset_n),
-//    .pc_f1_i               (pc_f1),
-//    .flush                 (flush_rt_r),
-//    .bpd_chdir_i           (bpd_pht_choice_f1),
-//    .bpd_lochist_i         (bpd_bht_lochist_f1),
-//    .btb_brdir_i           (btb_brdir_f1),
-//    .cond_br_i             (bpd_condbr_flag),
-//    .pc_f1_nt_i            (pc_f1_nt),
-//    .pc_f1_t_i             (pc_f1_t),
-//    .bpd_rt_ud_i           (brcond_vld_rt_r),
-//    .bpd_rt_brdir_i        (brdir_rt_r),
-//
-//    .pdir_in               (bob_brdir_o_r), //not used
-//
-//    .bob_lochist_i         (bob_lochist_o_r),
-//    .bob_pc_r_i            (bob_pc_o_r),
-//    .bob_bhr_r_i           (bob_bhr_o_r),
-//    .bob_valid_r_i         (bob_valid_o_r),
-//
-//    .bpd_final_pred_o      (brdir_bpd2bob),
-//    .bpd_ch_we_o           (ch_we_bpd2bob),
-//    .bpd_ch_ud_o           (ch_ud_bpd2bob),
-//    .bpd_bhr_o             (bpd1_bhr_bpd2bob),
-//    .bpd_override_o        (bpd1_override),
-//    .bpd_override_pc_o     (bpd_override_pc)
-//  );
-
 
   wire bob_re = brcond_vld_rt_i|brindir_vld_rt_i;
 
@@ -337,33 +306,6 @@ brdec brdec_inst(
                 (brtyp_brdec2x==`BR_INDIR_RAS)|
                 (brtyp_brdec2x==`BR_INDIR_PC)&
                  br_exist&~inst_invld_f1&~stackaccess_btbmiss;
-
-  bob bob_inst(
-    .clock                       (clock),
-    .reset_n                     (reset_n),
-    .flush                       (flush_rt_i),
-    .bob_re_i                    (bob_re),
-    .bob_we_i                    (bob_we),
-
-    .pc_f1_i                     (pc_f1),
-    .bob_brdir_i                 (brdir_bpd2bob),
-    .bob_ch_we_i                 (ch_we_bpd2bob),
-    .bob_ch_ud_i                 (ch_ud_bpd2bob),
-    .bob_lochist_i               (bpd_bht_lochist_f1),
-    .bob_bhr_i                   (bpd1_bhr_bpd2bob),
-    .bob_rasptr_i                (ras_ptr_f1),
-
-    .bob_pc_o                    (bob_pc_o),
-    .bob_brdir_o                 (bob_brdir_o),
-    .bob_ch_we_o                 (bob_chwe_o),
-    .bob_ch_dir_o                (bob_chdir_o),
-    .bob_lochist_o               (bob_lochist_o),
-    .bob_bhr_o                   (bob_bhr_o),
-    .bob_rasptr_o                (bob_rasptr_o),
-
-    .bob_valid_o                 (bob_valid_o),
-    .bob_stall_o                 (bob_stall_o)
-  );
 
   always @ (posedge clock or negedge reset_n)
   begin
@@ -412,14 +354,6 @@ brdec brdec_inst(
   assign override_vld = bpd1_override | ((brtyp_brdec2x == `BR_UNCOND) && ~btb_brdir_f1 && ~inst_invld_f1) |stackaccess_btbmiss;
   assign override_vld_o = override_vld;
 
-//  inst_align align_inst(
-//    .offset_i          (pc_f1[4:2]),
-//    .select_i          (pc_f1[5]),
-//    .even_fetch_i      (inst_fg0_i),
-//    .odd_fetch_i       (inst_fg1_i),
-//    .inst_aligned_o    (inst_aligned)
-//  );
-
   wire [31:0] inst0_f1 = inst_align_i[ 31:  0];
   wire [31:0] inst1_f1 = inst_align_i[ 63: 32];
   wire [31:0] inst2_f1 = inst_align_i[ 95: 64];
@@ -460,7 +394,7 @@ begin
     inst6_d0_o        <= 32'h0;
     inst7_d0_o        <= 32'h0;
   end
-  else if (pipe_ctrl_fetch) begin
+  else if (pipctl_fill_f1_i) begin
     inst0_vld_d0_o    <= inst0_vld_f1;
     inst1_vld_d0_o    <= inst1_vld_f1;
     inst2_vld_d0_o    <= inst2_vld_f1;
