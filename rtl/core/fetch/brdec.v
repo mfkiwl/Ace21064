@@ -11,26 +11,24 @@
 //
 //////////////////////////////////////////////////////////////////////////////////////////
 module brdec (
-  input wire [63:0]  pc_f1_i,
-  input wire [31:0]  inst7_i,     // fetched instructions
-  input wire [31:0]  inst6_i,
-  input wire [31:0]  inst5_i,
-  input wire [31:0]  inst4_i,
-  input wire [31:0]  inst3_i,
-  input wire [31:0]  inst2_i,
-  input wire [31:0]  inst1_i,
-  input wire [31:0]  inst0_i,
-  input wire [63:0]  ras_data_i,
-  input wire         flush_vld_i,
-  // outputs
-  output reg  [63:0] ras_data_o,
-  output reg  [ 1:0] ras_ctrl_o,
-//  output wire        br_exist_o, // use btb_we_o to replace
-  output wire        btb_we_o,
-  output wire [2:0]  btb_br_pos_o,
-  output reg  [1:0]  btb_br_typ_o,
-  output reg  [63:0] btb_br_tar_o,
-  output reg  [7:0]  inst_valid_o
+  input  wire [63:0] pc_f1_i,
+  input  wire [31:0] inst0_i,     // fetched instructions
+  input  wire [31:0] inst1_i,
+  input  wire [31:0] inst2_i,
+  input  wire [31:0] inst3_i,
+  input  wire [31:0] inst4_i,
+  input  wire [31:0] inst5_i,
+  input  wire [31:0] inst6_i,
+  input  wire [31:0] inst7_i,
+  input  wire [63:0] ras_pcdata_f0_i,
+  input  wire        flush_vld_i,
+  output reg  [63:0] brdec_rasdat_f1_o,
+  output reg  [ 1:0] brdec_rasctl_f1_o,
+  output wire        brdec_brext_f1_o,
+  output wire [ 2:0] brdec_brpos_f1_o,
+  output reg  [ 1:0] brdec_brtyp_f1_o,
+  output reg  [63:0] brdec_brtar_f1_o,
+  output reg  [ 7:0] brdec_instvld_f1_o
 );
   // internal vars
   wire [ 7:0] br_flag; // indicates this inst is an branch instruction.
@@ -52,7 +50,7 @@ module brdec (
   brdec_way brdec_way0(
   .inst_i             (inst0_i),
   .pc_f1_i            (pc0_i),
-  .ras_data_i         (ras_data_i),
+  .ras_data_i(ras_pcdata_f0_i         ),
   .rs1_data_i         (),
   .rs1_idx_o          (),
   .rs1_req_o          (),
@@ -64,7 +62,7 @@ module brdec (
   brdec_way brdec_way1(
   .inst_i             (inst1_i),
   .pc_f1_i            (pc1_i),
-  .ras_data_i         (ras_data_i),
+  .ras_data_i(ras_pcdata_f0_i         ),
   .rs1_data_i         (),
   .rs1_idx_o          (),
   .rs1_req_o          (),
@@ -76,7 +74,7 @@ module brdec (
   brdec_way brdec_way2(
   .inst_i             (inst2_i),
   .pc_f1_i            (pc2_i),
-  .ras_data_i         (ras_data_i),
+  .ras_data_i(ras_pcdata_f0_i         ),
   .rs1_data_i         (),
   .rs1_idx_o          (),
   .rs1_req_o          (),
@@ -88,7 +86,7 @@ module brdec (
   brdec_way brdec_way3(
   .inst_i             (inst3_i),
   .pc_f1_i            (pc3_i),
-  .ras_data_i         (ras_data_i),
+  .ras_data_i(ras_pcdata_f0_i         ),
   .rs1_data_i         (),
   .rs1_idx_o          (),
   .rs1_req_o          (),
@@ -100,7 +98,7 @@ module brdec (
   brdec_way brdec_way4(
   .inst_i             (inst4_i),
   .pc_f1_i            (pc4_i),
-  .ras_data_i         (ras_data_i),
+  .ras_data_i(ras_pcdata_f0_i         ),
   .rs1_data_i         (),
   .rs1_idx_o          (),
   .rs1_req_o          (),
@@ -112,7 +110,7 @@ module brdec (
   brdec_way brdec_way5(
   .inst_i             (inst5_i),
   .pc_f1_i            (pc5_i),
-  .ras_data_i         (ras_data_i),
+  .ras_data_i(ras_pcdata_f0_i         ),
   .rs1_data_i         (),
   .rs1_idx_o          (),
   .rs1_req_o          (),
@@ -124,7 +122,7 @@ module brdec (
   brdec_way brdec_way6(
   .inst_i             (inst6_i),
   .pc_f1_i            (pc6_i),
-  .ras_data_i         (ras_data_i),
+  .ras_data_i         (ras_pcdata_f0_i         ),
   .rs1_data_i         (),
   .rs1_idx_o          (),
   .rs1_req_o          (),
@@ -136,7 +134,7 @@ module brdec (
   brdec_way brdec_way7(
   .inst_i             (inst7_i),
   .pc_f1_i            (pc7_i),
-  .ras_data_i         (ras_data_i),
+  .ras_data_i         (ras_pcdata_f0_i         ),
   .rs1_data_i         (),
   .rs1_idx_o          (),
   .rs1_req_o          (),
@@ -153,43 +151,43 @@ module brdec (
     casez ({flush_vld_i,br_flag})   // only one branch instruction is permitted in one fetch bundle
       9'b1???????? : begin 
                        br_pos       = 3'b000;
-                       inst_valid_o = 8'b00000000;
+                       brdec_instvld_f1_o = 8'b00000000;
                      end 
       9'b000000001 : begin 
                        br_pos       = 3'b000;
-                       inst_valid_o = 8'b00000001;
+                       brdec_instvld_f1_o = 8'b00000001;
                      end
       9'b00000001? : begin
                        br_pos       = 3'b001;
-                       inst_valid_o = 8'b00000011;
+                       brdec_instvld_f1_o = 8'b00000011;
                      end
       9'b0000001?? : begin
                        br_pos       = 3'b010;
-                       inst_valid_o = 8'b00000111;
+                       brdec_instvld_f1_o = 8'b00000111;
                      end
       9'b000001??? : begin
                        br_pos       = 3'b011;
-                       inst_valid_o = 8'b00001111;
+                       brdec_instvld_f1_o = 8'b00001111;
                      end
       9'b00001???? : begin
                        br_pos       = 3'b100;
-                       inst_valid_o = 8'b00011111;
+                       brdec_instvld_f1_o = 8'b00011111;
                      end
       9'b0001????? : begin
                        br_pos       = 3'b101;
-                       inst_valid_o = 8'b00111111;
+                       brdec_instvld_f1_o = 8'b00111111;
                      end
       9'b001?????? : begin
                        br_pos       = 3'b110;
-                       inst_valid_o = 8'b01111111;
+                       brdec_instvld_f1_o = 8'b01111111;
                      end
       9'b01??????? : begin
                        br_pos       = 3'b111;
-                       inst_valid_o = 8'b11111111;
+                       brdec_instvld_f1_o = 8'b11111111;
                      end
       default      : begin
                        br_pos       = 3'b000;
-                       inst_valid_o = 8'b11111111;
+                       brdec_instvld_f1_o = 8'b11111111;
                      end
     endcase
   end
@@ -199,60 +197,59 @@ module brdec (
   begin
     case (br_pos)
       3'b000: begin
-                btb_br_typ_o = type0;
-                btb_br_tar_o = ta0;
-                ras_ctrl_o   = ras_ctl0;
-                ras_data_o   = pc0_i;
+                brdec_brtyp_f1_o = type0;
+                brdec_brtar_f1_o = ta0;
+                brdec_rasctl_f1_o   = ras_ctl0;
+                brdec_rasdat_f1_o   = pc0_i;
               end
       3'b001: begin
-                btb_br_typ_o = type1;
-                btb_br_tar_o = ta1;
-                ras_ctrl_o   = ras_ctl1;
-                ras_data_o   = pc1_i;
+                brdec_brtyp_f1_o = type1;
+                brdec_brtar_f1_o = ta1;
+                brdec_rasctl_f1_o   = ras_ctl1;
+                brdec_rasdat_f1_o   = pc1_i;
               end
       3'b010: begin
-                btb_br_typ_o = type2;
-                btb_br_tar_o = ta2;
-                ras_ctrl_o   = ras_ctl2;
-                ras_data_o   = pc2_i;
+                brdec_brtyp_f1_o = type2;
+                brdec_brtar_f1_o = ta2;
+                brdec_rasctl_f1_o   = ras_ctl2;
+                brdec_rasdat_f1_o   = pc2_i;
               end
       3'b011: begin
-                btb_br_typ_o = type3;
-                btb_br_tar_o = ta3;
-                ras_ctrl_o   = ras_ctl3;
-                ras_data_o   = pc3_i;
+                brdec_brtyp_f1_o = type3;
+                brdec_brtar_f1_o = ta3;
+                brdec_rasctl_f1_o   = ras_ctl3;
+                brdec_rasdat_f1_o   = pc3_i;
               end
       3'b100: begin
-                btb_br_typ_o = type4;
-                btb_br_tar_o = ta4;
-                ras_ctrl_o   = ras_ctl4;
-                ras_data_o   = pc4_i;
+                brdec_brtyp_f1_o = type4;
+                brdec_brtar_f1_o = ta4;
+                brdec_rasctl_f1_o   = ras_ctl4;
+                brdec_rasdat_f1_o   = pc4_i;
               end
       3'b101: begin
-                btb_br_typ_o = type5;
-                btb_br_tar_o = ta5;
-                ras_ctrl_o   = ras_ctl5;
-                ras_data_o   = pc5_i;
+                brdec_brtyp_f1_o = type5;
+                brdec_brtar_f1_o = ta5;
+                brdec_rasctl_f1_o   = ras_ctl5;
+                brdec_rasdat_f1_o   = pc5_i;
               end
       3'b110: begin
-                btb_br_typ_o = type6;
-                btb_br_tar_o = ta6;
-                ras_ctrl_o   = ras_ctl6;
-                ras_data_o   = pc6_i;
+                brdec_brtyp_f1_o = type6;
+                brdec_brtar_f1_o = ta6;
+                brdec_rasctl_f1_o   = ras_ctl6;
+                brdec_rasdat_f1_o   = pc6_i;
               end
       3'b111: begin
-                btb_br_typ_o = type7;
-                btb_br_tar_o = ta7;
-                ras_ctrl_o   = ras_ctl7;
-                ras_data_o   = pc7_i;
+                brdec_brtyp_f1_o = type7;
+                brdec_brtar_f1_o = ta7;
+                brdec_rasctl_f1_o   = ras_ctl7;
+                brdec_rasdat_f1_o   = pc7_i;
               end
       default:begin
               end
     endcase
   end
 
-  assign btb_we_o     = |br_flag && !flush_vld_i;
-//  assign br_exist_o   = |br_flag && !flush_vld_i;
-  assign btb_br_pos_o = br_pos;
+  assign brdec_brext_f1_o     = |br_flag && !flush_vld_i;
+  assign brdec_brpos_f1_o = br_pos;
 
 endmodule

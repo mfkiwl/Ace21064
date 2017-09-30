@@ -18,9 +18,7 @@
 module btb_way (
   input wire             clock,
   input wire             reset_n,
-  // read BTB
   input wire [63:0]      pc_f0_i,      // The PC value to be used to access the BTB
-  // update BTB -- fetch1
   input wire             btb_sp_we_i,     // btb speculate write enable
   input wire [ 2:0]      btb_sp_brpos_i,  // btb speculate branch position
   input wire [ 1:0]      btb_sp_brtyp_i,  // btb speculate branch type
@@ -29,17 +27,16 @@ module btb_way (
 
   input wire             btb_rt_we_i,     // btb retire write enable
   input wire             btb_rt_brdir_i,  // btb retire branch directory
-  input wire [63:0]      btb_rt_brpc_i,   // btb retire bundle pc
-
-  input wire [63:0]      taken_addr_i,
+  input wire [63:0]      btb_rt_brtar_i,  // btb retire branch target
+  input wire [63:0]      btb_rt_brpc_i,   // btb retire branch pc
 
   input wire [ 1:0]      ras_ctl_i,
-  output reg [ 1:0]      btb_ras_ctl_o,
 
-  output reg [ 2:0]      btb_br_pos_o,     // the position of the first branch in the bundle
-  output reg [ 1:0]      btb_br_typ_o,     // the type of branch
-  output reg [63:0]      btb_br_tar_o,     // the previously calculated target of the branch
-  output reg             btb_br_dir_o,     // branch direction(condition) speculation
+  output reg [ 1:0]      btb_rasctl_f0_o,
+  output reg [ 2:0]      btb_brpos_f0_o,     // the position of the first branch in the bundle
+  output reg [ 1:0]      btb_brtyp_f0_o,     // the type of branch
+  output reg [63:0]      btb_brtar_f0_o,     // the previously calculated target of the branch
+  output reg             btb_brdir_f0_o,     // branch direction(condition) speculation
   output reg             btb_hit_f0_o,     // indicates whether an entry exists for this PC
   output wire            btb_hit_f1_o
 );
@@ -94,34 +91,34 @@ module btb_way (
   always @ * 
   begin: BTBReadBlock
     btb_hit_f0_o   =  1'b0;
-    btb_ras_ctl_o  =  2'h0;
-    btb_br_pos_o   =  3'h0;
-    btb_br_typ_o   =  2'h0;
-    btb_br_tar_o   = 64'h0;
-    btb_br_dir_o   =  1'b0;
+    btb_rasctl_f0_o  =  2'h0;
+    btb_brpos_f0_o   =  3'h0;
+    btb_brtyp_f0_o   =  2'h0;
+    btb_brtar_f0_o   = 64'h0;
+    btb_brdir_f0_o   =  1'b0;
     if (btb_sp_bypass_en) begin
       btb_hit_f0_o  = 1'b1;
-      btb_ras_ctl_o = ras_ctl_i;
-      btb_br_pos_o  = btb_sp_brpos_i;
-      btb_br_typ_o  = btb_sp_brtyp_i;
-      btb_br_tar_o  = btb_sp_brtar_i;
-      btb_br_dir_o  = (BTB_CNT_INIT >= 2'b10) ? 1'b1 : 1'b0;
+      btb_rasctl_f0_o = ras_ctl_i;
+      btb_brpos_f0_o  = btb_sp_brpos_i;
+      btb_brtyp_f0_o  = btb_sp_brtyp_i;
+      btb_brtar_f0_o  = btb_sp_brtar_i;
+      btb_brdir_f0_o  = (BTB_CNT_INIT >= 2'b10) ? 1'b1 : 1'b0;
     end
     else if (btb_cm_bypass_en) begin
       btb_hit_f0_o  = 1'b1;
-      btb_br_tar_o  = taken_addr_i;
-      btb_br_pos_o  = btb_br_pos[idx_f0];
-      btb_br_typ_o  = btb_br_typ[idx_f0];
-      btb_ras_ctl_o = btb_ras_ctl[idx_f0];
-      btb_br_dir_o  = btb_cm_pred[1];
+      btb_brtar_f0_o  = btb_rt_brtar_i;
+      btb_brpos_f0_o  = btb_br_pos[idx_f0];
+      btb_brtyp_f0_o  = btb_br_typ[idx_f0];
+      btb_rasctl_f0_o = btb_ras_ctl[idx_f0];
+      btb_brdir_f0_o  = btb_cm_pred[1];
     end
     else if (btb_hit_vld) begin
       btb_hit_f0_o  = 1'b1;
-      btb_ras_ctl_o = btb_ras_ctl[idx_f0];
-      btb_br_pos_o  = btb_br_pos[idx_f0];
-      btb_br_typ_o  = btb_br_typ[idx_f0];
-      btb_br_tar_o  = btb_br_tar[idx_f0];
-      btb_br_dir_o  = (btb_cnt[idx_f0] >= 2'b10) ? 1'b1 : 1'b0; 
+      btb_rasctl_f0_o = btb_ras_ctl[idx_f0];
+      btb_brpos_f0_o  = btb_br_pos[idx_f0];
+      btb_brtyp_f0_o  = btb_br_typ[idx_f0];
+      btb_brtar_f0_o  = btb_br_tar[idx_f0];
+      btb_brdir_f0_o  = (btb_cnt[idx_f0] >= 2'b10) ? 1'b1 : 1'b0; 
     end
   end
 
@@ -160,7 +157,7 @@ module btb_way (
       btb_cnt[idx_rt] <= btb_rt_pred;
       // we only need to update the taken addr if it's a register jump
       if (btb_br_typ[idx_rt] == `BR_INDIR_RAS || btb_br_typ[idx_rt] == `BR_INDIR_PC)
-        btb_br_tar[idx_rt] <= taken_addr_i;
+        btb_br_tar[idx_rt] <= btb_rt_brtar_i;
     end
   end
 

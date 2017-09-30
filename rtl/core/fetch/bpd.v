@@ -18,13 +18,12 @@ module bpd(
   input  wire                     reset_n,
   input  wire [63:0]              pc_f0_i,      
   input  wire [63:0]              pc_f1_i,
-  input  wire [63:0]              pc_f1_t_i,
-  input  wire [63:0]              pc_f1_nt_i,
   input  wire                     pipctl_flush_rt_i,
   input  wire                     pipctl_fill_f1_i,
-
-  input  wire                     bpd_condbr_i,
-  input  wire                     btb_brdir_f1_i,
+  // bhr shift enable
+  input  wire                     brdec_brtyp_i,
+  input  wire                     brdec_brext_i,
+  input  wire                     fetch_instinvld_i,
   // from retire stage, which offers cert information about branch
   input  wire                     brcond_vld_rt_i,
   input  wire                     brindir_vld_rt_i,
@@ -35,17 +34,15 @@ module bpd(
 
   input  wire [11:0]              bob_bhr_r_i,      // from bob
   input  wire [ 9:0]              bob_lochist_i,    // from bob
-  input  wire                     bpd_ch_we_i,      // from bob
-  input  wire                     bpd_ch_brdir_i,   // from bob
+  input  wire                     bob_ch_we_i,      // from bob
+  input  wire                     bob_ch_brdir_i,   // from bob
 
   output wire [11:0]              bpd_bhr_o,          // to bob global history
   output wire [ 9:0]              bpd_bht_o,          // to bob local history
   output wire                     bpd_ch_we_o,        // to bob
   output wire                     bpd_ch_brdir_o,     // to bob
 
-  output wire                     bpd_final_pred_o,
-  output wire                     bpd_override_o,
-  output wire [63:0]              bpd_override_pc_o
+  output wire                     bpd_final_pred_o
 
 );
 
@@ -85,8 +82,8 @@ module bpd(
   assign  bpd_brdir_cert    = brdir_rt_i;
 
   assign  bht_brdir_cert    = bpd_brdir_cert & bpd_brdir_we_cert; 
-  assign  bpd_ch_brdir      = bpd_brdir_cert ^ bpd_ch_brdir_i;
-  assign  bpd_ch_we_cert    = bpd_ch_we_i    & bpd_brdir_we_cert;
+  assign  bpd_ch_brdir      = bpd_brdir_cert ^ bob_ch_brdir_i;
+  assign  bpd_ch_we_cert    = bob_ch_we_i    & bpd_brdir_we_cert;
 
   // choice pht for the tourament branch predictor
   pht #(
@@ -139,7 +136,7 @@ module bpd(
       else if (pipctl_flush_rt_i)
         if ( bob_valid_r_i ) 
           bhr <= bob_bhr_r_i;
-      else if (bpd_condbr_i == 1'b1)
+      else if ((brdec_brtyp_i== `BR_COND) & brdec_brext_i & (!fetch_instinvld_i))
         bhr <= { bhr[10:0], bpd_final_pred_o };
   end
 
@@ -183,9 +180,6 @@ module bpd(
   assign local_pht_wt_idx  = bob_lochist_i; 
 
   assign bpd_final_pred_o  = pht_choice_f1 ? global_pred : local_pred;
-
-  assign bpd_override_o    = (btb_brdir_f1_i ^ bpd_final_pred_o) & bpd_condbr_i;
-  assign bpd_override_pc_o = bpd_final_pred_o ? pc_f1_t_i : pc_f1_nt_i;
 
 /* 
  * truth table for choice predictor update

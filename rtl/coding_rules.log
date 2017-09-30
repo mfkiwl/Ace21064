@@ -1,0 +1,9 @@
+interface signals
+
+xxx_yyy_zz_w
+[xxx] source module name
+[yyy] singal function abbreviation
+[zz]  singal pipeline stage information
+[w]   signal direction identifier
+
+eg: bob_lochist_f1_o

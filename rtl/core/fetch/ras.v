@@ -16,29 +16,21 @@
 module ras(
   input  wire           clock,
   input  wire           reset_n,
-//  input  wire           ras_flush, //flush signal come from retire stage
   input  wire           flush_rt_i,
   input  wire           icache_stall_i,
-  input  wire           bob_vld_i,
-
-//  input  wire           ras_we,
   input  wire           invalid_f1_i,
-
-//  input  wire           ras_override,
   input  wire           bpd_override_i,
-  input  wire           btb_brtyp_i,
-  input  wire           btb_brdir_r_i, 
+  input  wire           brdec_brtyp_f1_i,
+  input  wire [63:0]    brdec_rasdat_f1_i,       // The data to be pushed into stack.
+  input  wire           btb_hit_f0_i,
+  input  wire           btb_brdir_f1_i, 
+  input  wire [ 1:0]    btb_rasctl_f0_i,         // Push pop control signal.
+  input  wire [ 3:0]    bob_rasptr_f1r_i,
+  input  wire           bob_vld_f1r_i,
 
-  input  wire [63:0]    ras_data_i,            // The data to be pushed into stack.
-
-  input  wire [ 1:0]    btb_rasctl_i,            // Push pop control signal.
-  input  wire           btb_hit_i,
-
-  input  wire [ 3:0]    ras_ptr_rt_i,
-
-  output wire [63:0]    ras_data_o,           // The data on top of stack.
-  output wire           ras_valid_o,
-  output wire [ 3:0]    ras_ptr_o
+  output wire [63:0]    ras_data_f0_o,           // The data on top of stack.
+  output wire           ras_vld_f0_o,
+  output wire [ 3:0]    ras_ptr_f0_o
 );
 
   localparam NOAC = 3'b000; // No action.
@@ -76,10 +68,10 @@ module ras(
         PUSH         : ras_index_tmp = (ras_index+1)%16;
         POP          : ras_index_tmp = (ras_index-1)%16;
         POPU         : ras_index_tmp = ras_index;
-        FLUSH_NOAC   : ras_index_tmp = ras_ptr_rt_i;
-        FLUSH_PUSH   : ras_index_tmp = (ras_ptr_rt_i+1)%16;
-        FLUSH_POP    : ras_index_tmp = (ras_ptr_rt_i-1)%16;
-        FLUSH_POPU   : ras_index_tmp = ras_ptr_rt_i;
+        FLUSH_NOAC   : ras_index_tmp = bob_rasptr_f1r_i;
+        FLUSH_PUSH   : ras_index_tmp = (bob_rasptr_f1r_i+1)%16;
+        FLUSH_POP    : ras_index_tmp = (bob_rasptr_f1r_i-1)%16;
+        FLUSH_POPU   : ras_index_tmp = bob_rasptr_f1r_i;
         default:;
       endcase
   end
@@ -89,17 +81,17 @@ module ras(
     .clock       (clock),
     .reset_n     (reset_n),
     .we_in       (ras_we),
-    .data_in     (ras_data_i),
+    .data_in     (brdec_rasdat_f1_i),
     .index_in    (ras_index),
     .data_out    (ras_data_tmp)
   );
 
-  assign ras_ctl          = btb_rasctl_i & {2{~icache_stall_i & btb_hit_i}};
+  assign ras_ctl          = btb_rasctl_f0_i & {2{~icache_stall_i & btb_hit_f0_i}};
   assign ras_override     = bpd_override_i | 
-                          ((btb_brtyp_i == `BR_UNCOND) & ~btb_brdir_r_i & ~invalid_f1_i) |
-                          ((ras_ctl != 2'b00) & ~btb_brdir_r_i & ~invalid_f1_i);
+                          ((brdec_brtyp_f1_i == `BR_UNCOND) & ~btb_brdir_f1_i & ~invalid_f1_i) |
+                          ((ras_ctl != 2'b00) & ~btb_brdir_f1_i & ~invalid_f1_i);
 
-  assign ras_flush        = flush_rt_i & bob_vld_i;
+  assign ras_flush        = flush_rt_i & bob_vld_f1r_i;
   assign ras_we           = ras_ctl[0] & ~invalid_f1_i & ~ras_override; 
 
   assign ras_index_sel    = {ras_flush,(ras_ctl & {2{~ras_override}})};
@@ -108,8 +100,8 @@ module ras(
                            (ras_ctl[0] ? ras_index   : ras_index-1):
                            (ras_ctl[0] ? ras_index+1 : ras_index  );
 
-  assign ras_ptr_o        = ras_flush ? ras_ptr_rt_i : ras_ptr_tmp;
-  assign ras_data_o       = ras_we    ? ras_data_i   : ras_data_tmp;
-  assign ras_valid_o      = 1'b1;
+  assign ras_ptr_f0_o        = ras_flush ? bob_rasptr_f1r_i : ras_ptr_tmp;
+  assign ras_data_f0_o       = ras_we    ? brdec_rasdat_f1_i   : ras_data_tmp;
+  assign ras_vld_f0_o        = 1'b1;
 
 endmodule

@@ -15,25 +15,27 @@
 module btb (
   input wire               clock,
   input wire               reset_n,
-  input wire [ 63:0]       pc_f0_i,
-  input wire               btb_sp_we_i,
-  input wire [ 2:0]        btb_sp_brpos_i,
-  input wire [ 1:0]        btb_sp_brtyp_i,
-  input wire [63:0]        btb_sp_brpc_i,
-  input wire [63:0]        btb_sp_brtar_i,
+  input wire [63:0]        pc_f0_i,
+  input wire [63:0]        pc_f1_i,
 
-  input wire               btb_rt_we_i,
-  input wire               btb_rt_brdir_i,
-  input wire [63:0]        btb_rt_brpc_i,
+  input wire               brdec_brext_f1_i, // btb speculative write enable
+  input wire [ 2:0]        brdec_brpos_f1_i, // btb speculative write data brpos
+  input wire [ 1:0]        brdec_brtyp_f1_i, // btb speculative write data brtyp
+  input wire [63:0]        brdec_brtar_f1_i, // btb speculative write data brtar
+  input wire [ 1:0]        brdec_rasctl_f1_i,
 
-  input wire [63:0]        taken_addr_in,
-  input wire [ 1:0]        ras_ctrl_in,
-  output reg               btb_hit_o,       // btb hit flag
-  output reg [ 2:0]        btb_br_pos_o,    // branch instruction position in a fetch bundle
-  output reg [ 1:0]        btb_br_typ_o,    // branch type
-  output reg [63:0]        btb_br_tar_o,    // branch target
-  output reg [ 1:0]        btb_ras_ctl_o,
-  output reg               btb_br_dir_o     // branch direction(condition)
+  input wire               brcond_vld_rt_i,
+  input wire               brindir_vld_rt_i,
+  input wire               brdir_rt_i,
+  input wire [63:0]        brtar_rt_i,
+  input wire [63:0]        brpc_rt_i, // from bob
+
+  output reg               btb_hit_f0_o,       // btb hit flag
+  output reg [ 2:0]        btb_brpos_f0_o,    // branch instruction position in a fetch bundle
+  output reg [ 1:0]        btb_brtyp_f0_o,    // branch type
+  output reg [63:0]        btb_brtar_f0_o,    // branch target
+  output reg [ 1:0]        btb_rasctl_f0_o,
+  output reg               btb_brdir_f0_o     // branch direction(condition)
 );
 
   integer i;
@@ -49,30 +51,40 @@ module btb (
 
   reg         btb_sp_we_way0_f1, btb_sp_we_way1_f1, btb_sp_we_way2_f1, btb_sp_we_way3_f1;
 
-  wire [7:0] idx_f1 = btb_sp_brpc_i[9:2];
-  wire [7:0] idx_f0 = pc_f0_i[9:2];
+  wire [ 7:0] idx_f1 = pc_f1_i[9:2];
+  wire [ 7:0] idx_f0 = pc_f0_i[9:2];
 
+  wire        btb_brdir_we_cert;
+  wire        btb_brdir_cert;
+  wire [63:0] btb_brpc_cert;
+  wire [63:0] btb_brtar_cert;
+
+
+  assign btb_brdir_we_cert = brcond_vld_rt_i | brindir_vld_rt_i;
+  assign btb_brdir_cert    = brdir_rt_i;
+  assign btb_brpc_cert     = brpc_rt_i;
+  assign btb_brtar_cert    = brtar_rt_i;
   // instantiate the four ways
   btb_way btb_way0(
     .clock             (clock             ),
     .reset_n           (reset_n           ),
     .pc_f0_i           (pc_f0_i           ),
     .btb_sp_we_i       (btb_sp_we_way0_f1),
-    .btb_sp_brpos_i    (btb_sp_brpos_i),
-    .btb_sp_brtyp_i    (btb_sp_brtyp_i),
-    .btb_sp_brpc_i     (btb_sp_brpc_i ),
-    .btb_sp_brtar_i    (btb_sp_brtar_i),
-    .ras_ctl_i         (ras_ctrl_in     ),
-    .btb_rt_we_i       (btb_rt_we_i   ),
-    .btb_rt_brdir_i    (btb_rt_brdir_i),
-    .btb_rt_brpc_i     (btb_rt_brpc_i ),
-    .taken_addr_i      (taken_addr_in   ),
+    .btb_sp_brpos_i    (brdec_brpos_f1_i),
+    .btb_sp_brtyp_i    (brdec_brtyp_f1_i),
+    .btb_sp_brpc_i     (pc_f1_i           ),
+    .btb_sp_brtar_i    (brdec_brtar_f1_i),
+    .ras_ctl_i         (brdec_rasctl_f1_i     ),
+    .btb_rt_we_i       (btb_brdir_we_cert ),
+    .btb_rt_brdir_i    (btb_brdir_cert),
+    .btb_rt_brpc_i     (btb_brpc_cert),
+    .btb_rt_brtar_i    (btb_brtar_cert),
     .btb_hit_f0_o      (btb_hit_way0_f0       ),
-    .btb_br_pos_o      (br_pos_way0           ),
-    .btb_br_typ_o      (br_typ_way0           ),
-    .btb_br_tar_o      (br_tar_way0           ),
-    .btb_ras_ctl_o     (ras_ctl_way0          ),
-    .btb_br_dir_o      (br_dir_way0           ),
+    .btb_brpos_f0_o      (br_pos_way0           ),
+    .btb_brtyp_f0_o      (br_typ_way0           ),
+    .btb_brtar_f0_o      (br_tar_way0           ),
+    .btb_rasctl_f0_o     (ras_ctl_way0          ),
+    .btb_brdir_f0_o      (br_dir_way0           ),
     .btb_hit_f1_o      (btb_hit_way0_f1       )
   );
 
@@ -81,21 +93,21 @@ module btb (
     .reset_n           (reset_n           ),
     .pc_f0_i           (pc_f0_i           ),
     .btb_sp_we_i       (btb_sp_we_way1_f1),
-    .btb_sp_brpos_i    (btb_sp_brpos_i),
-    .btb_sp_brtyp_i    (btb_sp_brtyp_i),
-    .btb_sp_brpc_i     (btb_sp_brpc_i ),
-    .btb_sp_brtar_i    (btb_sp_brtar_i),
-    .ras_ctl_i         (ras_ctrl_in     ),
-    .btb_rt_we_i       (btb_rt_we_i   ),
-    .btb_rt_brdir_i    (btb_rt_brdir_i),
-    .btb_rt_brpc_i     (btb_rt_brpc_i ),
-    .taken_addr_i      (taken_addr_in   ),
+    .btb_sp_brpos_i    (brdec_brpos_f1_i),
+    .btb_sp_brtyp_i    (brdec_brtyp_f1_i),
+    .btb_sp_brpc_i     (pc_f1_i     ),
+    .btb_sp_brtar_i    (brdec_brtar_f1_i),
+    .ras_ctl_i         (brdec_rasctl_f1_i     ),
+    .btb_rt_we_i       (btb_brdir_we_cert),
+    .btb_rt_brdir_i    (btb_brdir_cert),
+    .btb_rt_brpc_i     (btb_brpc_cert ),
+    .btb_rt_brtar_i    (btb_brtar_cert),
     .btb_hit_f0_o      (btb_hit_way1_f0       ),
-    .btb_br_pos_o      (br_pos_way1           ),
-    .btb_br_typ_o      (br_typ_way1           ),
-    .btb_br_tar_o      (br_tar_way1           ),
-    .btb_ras_ctl_o     (ras_ctl_way1          ),
-    .btb_br_dir_o      (br_dir_way1           ),
+    .btb_brpos_f0_o      (br_pos_way1           ),
+    .btb_brtyp_f0_o      (br_typ_way1           ),
+    .btb_brtar_f0_o      (br_tar_way1           ),
+    .btb_rasctl_f0_o     (ras_ctl_way1          ),
+    .btb_brdir_f0_o      (br_dir_way1           ),
     .btb_hit_f1_o      (btb_hit_way1_f1       )
   );
 
@@ -104,21 +116,21 @@ module btb (
     .reset_n           (reset_n           ),
     .pc_f0_i           (pc_f0_i           ),
     .btb_sp_we_i       (btb_sp_we_way2_f1),
-    .btb_sp_brpos_i    (btb_sp_brpos_i),
-    .btb_sp_brtyp_i    (btb_sp_brtyp_i),
-    .btb_sp_brpc_i     (btb_sp_brpc_i ),
-    .btb_sp_brtar_i    (btb_sp_brtar_i),
-    .ras_ctl_i         (ras_ctrl_in     ),
-    .btb_rt_we_i       (btb_rt_we_i   ),
-    .btb_rt_brdir_i    (btb_rt_brdir_i),
-    .btb_rt_brpc_i     (btb_rt_brpc_i ),
-    .taken_addr_i      (taken_addr_in   ),
+    .btb_sp_brpos_i    (brdec_brpos_f1_i),
+    .btb_sp_brtyp_i    (brdec_brtyp_f1_i),
+    .btb_sp_brpc_i     (pc_f1_i     ),
+    .btb_sp_brtar_i    (brdec_brtar_f1_i),
+    .ras_ctl_i         (brdec_rasctl_f1_i     ),
+    .btb_rt_we_i       (btb_brdir_we_cert),
+    .btb_rt_brdir_i    (btb_brdir_cert),
+    .btb_rt_brpc_i     (btb_brpc_cert ),
+    .btb_rt_brtar_i    (btb_brtar_cert),
     .btb_hit_f0_o      (btb_hit_way2_f0       ),
-    .btb_br_pos_o      (br_pos_way2           ),
-    .btb_br_typ_o      (br_typ_way2           ),
-    .btb_br_tar_o      (br_tar_way2           ),
-    .btb_ras_ctl_o     (ras_ctl_way2          ),
-    .btb_br_dir_o      (br_dir_way2           ),
+    .btb_brpos_f0_o      (br_pos_way2           ),
+    .btb_brtyp_f0_o      (br_typ_way2           ),
+    .btb_brtar_f0_o      (br_tar_way2           ),
+    .btb_rasctl_f0_o     (ras_ctl_way2          ),
+    .btb_brdir_f0_o      (br_dir_way2           ),
     .btb_hit_f1_o      (btb_hit_way2_f1       )
   );
 
@@ -127,21 +139,21 @@ module btb (
     .reset_n           (reset_n           ),
     .pc_f0_i           (pc_f0_i           ),
     .btb_sp_we_i       (btb_sp_we_way3_f1),
-    .btb_sp_brpos_i    (btb_sp_brpos_i),
-    .btb_sp_brtyp_i    (btb_sp_brtyp_i),
-    .btb_sp_brpc_i     (btb_sp_brpc_i ),
-    .btb_sp_brtar_i    (btb_sp_brtar_i),
-    .ras_ctl_i         (ras_ctrl_in     ),
-    .btb_rt_we_i       (btb_rt_we_i   ),
-    .btb_rt_brdir_i    (btb_rt_brdir_i),
-    .btb_rt_brpc_i     (btb_rt_brpc_i ),
-    .taken_addr_i      (taken_addr_in   ),
+    .btb_sp_brpos_i    (brdec_brpos_f1_i),
+    .btb_sp_brtyp_i    (brdec_brtyp_f1_i),
+    .btb_sp_brpc_i     (pc_f1_i           ),
+    .btb_sp_brtar_i    (brdec_brtar_f1_i),
+    .ras_ctl_i         (brdec_rasctl_f1_i     ),
+    .btb_rt_we_i       (btb_brdir_we_cert),
+    .btb_rt_brdir_i    (btb_brdir_cert),
+    .btb_rt_brpc_i     (btb_brpc_cert ),
+    .btb_rt_brtar_i    (btb_brtar_cert),
     .btb_hit_f0_o      (btb_hit_way3_f0       ),
-    .btb_br_pos_o      (br_pos_way3           ),
-    .btb_br_typ_o      (br_typ_way3           ),
-    .btb_br_tar_o      (br_tar_way3           ),
-    .btb_ras_ctl_o     (ras_ctl_way3          ),
-    .btb_br_dir_o      (br_dir_way3           ),
+    .btb_brpos_f0_o      (br_pos_way3           ),
+    .btb_brtyp_f0_o      (br_typ_way3           ),
+    .btb_brtar_f0_o      (br_tar_way3           ),
+    .btb_rasctl_f0_o     (ras_ctl_way3          ),
+    .btb_brdir_f0_o      (br_dir_way3           ),
     .btb_hit_f1_o      (btb_hit_way3_f1       )
   );
 
@@ -150,56 +162,56 @@ module btb (
   begin
     case ({btb_hit_way0_f0,btb_hit_way1_f0,btb_hit_way2_f0,btb_hit_way3_f0})
       4'b0000: begin
-        btb_hit_o      = 1'b0;
-        btb_ras_ctl_o  = 2'b0;
-        btb_br_pos_o   = 3'b000;
-        btb_br_typ_o   = 2'b00;
-        btb_br_tar_o   = 64'b0;
-        btb_br_dir_o   = 1'b0;
+        btb_hit_f0_o      = 1'b0;
+        btb_rasctl_f0_o  = 2'b0;
+        btb_brpos_f0_o   = 3'b000;
+        btb_brtyp_f0_o   = 2'b00;
+        btb_brtar_f0_o   = 64'b0;
+        btb_brdir_f0_o   = 1'b0;
       end
       4'b1000: begin
-        btb_hit_o      = 1'b1;
-        btb_ras_ctl_o  = ras_ctl_way0;
-        btb_br_pos_o   = br_pos_way0;
-        btb_br_typ_o   = br_typ_way0;
-        btb_br_tar_o   = br_tar_way0;
-        btb_br_dir_o   = br_dir_way0;
+        btb_hit_f0_o      = 1'b1;
+        btb_rasctl_f0_o  = ras_ctl_way0;
+        btb_brpos_f0_o   = br_pos_way0;
+        btb_brtyp_f0_o   = br_typ_way0;
+        btb_brtar_f0_o   = br_tar_way0;
+        btb_brdir_f0_o   = br_dir_way0;
       end
       4'b0100: begin
-        btb_hit_o      = 1'b1;
-        btb_ras_ctl_o  = ras_ctl_way1;
-        btb_br_pos_o   = br_pos_way1;
-        btb_br_typ_o   = br_typ_way1;
-        btb_br_tar_o   = br_tar_way1;
-        btb_br_dir_o   = br_dir_way1;
+        btb_hit_f0_o      = 1'b1;
+        btb_rasctl_f0_o  = ras_ctl_way1;
+        btb_brpos_f0_o   = br_pos_way1;
+        btb_brtyp_f0_o   = br_typ_way1;
+        btb_brtar_f0_o   = br_tar_way1;
+        btb_brdir_f0_o   = br_dir_way1;
       end
       4'b0010: begin
-        btb_hit_o      = 1'b1;
-        btb_ras_ctl_o  = ras_ctl_way2;
-        btb_br_pos_o   = br_pos_way2;
-        btb_br_typ_o   = br_typ_way2;
-        btb_br_tar_o   = br_tar_way2;
-        btb_br_dir_o   = br_dir_way2;
+        btb_hit_f0_o      = 1'b1;
+        btb_rasctl_f0_o  = ras_ctl_way2;
+        btb_brpos_f0_o   = br_pos_way2;
+        btb_brtyp_f0_o   = br_typ_way2;
+        btb_brtar_f0_o   = br_tar_way2;
+        btb_brdir_f0_o   = br_dir_way2;
       end
       4'b0001: begin
-        btb_hit_o      = 1'b1;
-        btb_ras_ctl_o  = ras_ctl_way3;
-        btb_br_pos_o   = br_pos_way3;
-        btb_br_typ_o   = br_typ_way3;
-        btb_br_tar_o   = br_tar_way3;
-        btb_br_dir_o   = br_dir_way3;
+        btb_hit_f0_o      = 1'b1;
+        btb_rasctl_f0_o  = ras_ctl_way3;
+        btb_brpos_f0_o   = br_pos_way3;
+        btb_brtyp_f0_o   = br_typ_way3;
+        btb_brtar_f0_o   = br_tar_way3;
+        btb_brdir_f0_o   = br_dir_way3;
       end
       default: begin
         // if the current read bundlepc is the same as the new entry to be written,
         // all the banks will match, since they'll all bypass the data.  so gate
         // the error message with this check
-        if (pc_f0_i != btb_sp_brpc_i)
-          btb_hit_o = 1'b0;
-          btb_ras_ctl_o = 2'b00;
-          btb_br_pos_o = 3'b000;
-          btb_br_typ_o = 2'b00;
-          btb_br_tar_o = 64'b0;
-          btb_br_dir_o = 1'b0;
+        if (pc_f0_i != pc_f1_i)
+          btb_hit_f0_o = 1'b0;
+          btb_rasctl_f0_o = 2'b00;
+          btb_brpos_f0_o = 3'b000;
+          btb_brtyp_f0_o = 2'b00;
+          btb_brtar_f0_o = 64'b0;
+          btb_brdir_f0_o = 1'b0;
         end
     endcase
   end
@@ -214,7 +226,7 @@ module btb (
     btb_sp_we_way1_f1 = 1'b0;
     btb_sp_we_way2_f1 = 1'b0;
     btb_sp_we_way3_f1 = 1'b0;
-    if (btb_sp_we_i)
+    if (brdec_brext_f1_i)
       casex ({btb_hit_way0_f1,btb_hit_way1_f1,btb_hit_way2_f1,btb_hit_way3_f1,
               lru_reg[idx_f1]})
         // write miss LRU strategy used. 

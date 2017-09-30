@@ -21,8 +21,14 @@ module bob(
   input  wire             flush,
   input  wire [63:0]      pc_f1_i,
 
-  input  wire             bob_re_i,
-  input  wire             bob_we_i,
+  input  wire             brcond_vld_rt_i,
+  input  wire             brindir_vld_rt_i,
+
+  input  wire             brdec_brtyp_i,
+  input  wire             brdec_brext_i,
+  input  wire             fetch_instinvld_i,
+  input  wire             fetch_btbmiss_i,
+
   input  wire             bob_brdir_i,
   input  wire             bob_ch_we_i,
   input  wire             bob_ch_ud_i,
@@ -30,12 +36,12 @@ module bob(
   input  wire [11:0]      bob_bhr_i,
   input  wire [ 3:0]      bob_rasptr_i,
 
-  output wire [63:0]      bob_pc_o,
+  output wire [63:0]      bob_brpc_o,
   output wire             bob_brdir_o,
   output wire             bob_ch_we_o,
   output wire             bob_ch_dir_o, //choice pht update
-  output wire [ 9:0]      bob_lochist_o,
-  output wire [11:0]      bob_bhr_o,
+  output wire [ 9:0]      bob_bht_o,    // local history
+  output wire [11:0]      bob_bhr_o,    // global history
   output wire [ 3:0]      bob_rasptr_o,
 
   output wire             bob_valid_o,
@@ -51,11 +57,11 @@ module bob(
   reg         [ 3:0]      bob_windex;
   reg         [15:0]      entry_valid;
 
-  assign bob_pc_o         = bob_rdata[92:29];
+  assign bob_brpc_o       = bob_rdata[92:29];
   assign bob_ch_we_o      = bob_rdata[28];
   assign bob_ch_dir_o     = bob_rdata[27];
   assign bob_brdir_o      = bob_rdata[26];
-  assign bob_lochist_o    = bob_rdata[25:16];
+  assign bob_bht_o        = bob_rdata[25:16];
   assign bob_bhr_o        = bob_rdata[15: 4];
   assign bob_rasptr_o     = bob_rdata[ 3: 0];
 
@@ -111,8 +117,12 @@ module bob(
     end
   end
 
-  assign bob_we      = bob_we_i && (~(&bob_windex)); // write valid, and bob not full
-  assign bob_re      = bob_re_i && entry_valid[bob_rindex];
+  assign bob_we      = (brdec_brtyp_i != `BR_UNCOND) && 
+                        brdec_brext_i &&
+                       (!fetch_instinvld_i) &&
+                       (!fetch_btbmiss_i) &&
+                       (~(&bob_windex)); // write valid, and bob not full
+  assign bob_re      = brcond_vld_rt_i || brcond_vld_rt_i && entry_valid[bob_rindex];
 
   assign bob_stall_o = &bob_windex;
   assign bob_valid_o = entry_valid[bob_rindex];
