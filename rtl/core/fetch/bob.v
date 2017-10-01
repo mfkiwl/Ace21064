@@ -30,16 +30,16 @@ module bob(
   input  wire             fetch_btbmiss_i,
 
   input  wire             bob_brdir_i,
-  input  wire             bob_ch_we_i,
-  input  wire             bob_ch_ud_i,
-  input  wire [ 9:0]      bob_lochist_i,
+  input  wire             bob_chwe_i,
+  input  wire             bob_chbrdir_i,
+  input  wire [ 9:0]      bob_bht_i,
   input  wire [11:0]      bob_bhr_i,
   input  wire [ 3:0]      bob_rasptr_i,
 
   output wire [63:0]      bob_brpc_o,
   output wire             bob_brdir_o,
-  output wire             bob_ch_we_o,
-  output wire             bob_ch_dir_o, //choice pht update
+  output wire             bob_chwe_o,
+  output wire             bob_chbrdir_o, //choice pht update
   output wire [ 9:0]      bob_bht_o,    // local history
   output wire [11:0]      bob_bhr_o,    // global history
   output wire [ 3:0]      bob_rasptr_o,
@@ -58,8 +58,8 @@ module bob(
   reg         [15:0]      entry_valid;
 
   assign bob_brpc_o       = bob_rdata[92:29];
-  assign bob_ch_we_o      = bob_rdata[28];
-  assign bob_ch_dir_o     = bob_rdata[27];
+  assign bob_chwe_o      = bob_rdata[28];
+  assign bob_chbrdir_o     = bob_rdata[27];
   assign bob_brdir_o      = bob_rdata[26];
   assign bob_bht_o        = bob_rdata[25:16];
   assign bob_bhr_o        = bob_rdata[15: 4];
@@ -87,10 +87,10 @@ module bob(
          );
 
   assign bob_wdata ={ pc_f1_i,
-                      bob_ch_we_i,
-                      bob_ch_ud_i,
+                      bob_chwe_i,
+                      bob_chbrdir_i,
                       bob_brdir_i,
-                      bob_lochist_i,
+                      bob_bht_i,
                       bob_bhr_i,
                       bob_rasptr_i };
 

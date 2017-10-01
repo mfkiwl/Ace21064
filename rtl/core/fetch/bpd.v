@@ -5,9 +5,10 @@
 //                
 //  Description : tourament branch prediction first stage, contains:
 //                local branch history table(bht) 1024x10bits 
+//                global branch history register(bhr) 12bits
 //                choice predictor pht 4096x2bits 
-//                
-//                
+//                local  predictor pht 1024x3bits
+//                global predictor pht 4096x2bits
 //                
 //  Create Date : original_time
 //  Version     : v0.1 
@@ -29,18 +30,18 @@ module bpd(
   input  wire                     brindir_vld_rt_i,
   input  wire                     brdir_rt_i,
 
-  input  wire [63:0]              bob_pc_r_i,       // from bob
-  input  wire                     bob_valid_r_i,    // from bob
+  input  wire [63:0]              bob_brpc_i,       // from bob
+  input  wire                     bob_valid_i,    // from bob
 
-  input  wire [11:0]              bob_bhr_r_i,      // from bob
-  input  wire [ 9:0]              bob_lochist_i,    // from bob
-  input  wire                     bob_ch_we_i,      // from bob
-  input  wire                     bob_ch_brdir_i,   // from bob
+  input  wire [11:0]              bob_bhr_i,      // from bob
+  input  wire [ 9:0]              bob_bht_i,    // from bob
+  input  wire                     bob_chwe_i,      // from bob
+  input  wire                     bob_chbrdir_i,   // from bob
 
   output wire [11:0]              bpd_bhr_o,          // to bob global history
   output wire [ 9:0]              bpd_bht_o,          // to bob local history
-  output wire                     bpd_ch_we_o,        // to bob
-  output wire                     bpd_ch_brdir_o,     // to bob
+  output wire                     bpd_chwe_o,        // to bob
+  output wire                     bpd_chbrdir_o,     // to bob
 
   output wire                     bpd_final_pred_o
 
@@ -74,16 +75,16 @@ module bpd(
 
 
   assign  pht_idx_spec = pc_f0_i[13:2];
-  assign  pht_idx_cert = bob_pc_r_i[13:2];
+  assign  pht_idx_cert = bob_brpc_i[13:2];
   assign  bht_idx_spec = pc_f0_i[11:2];
-  assign  bht_idx_cert = bob_pc_r_i[11:2];
+  assign  bht_idx_cert = bob_brpc_i[11:2];
 
   assign  bpd_brdir_we_cert = brcond_vld_rt_i | brindir_vld_rt_i;
   assign  bpd_brdir_cert    = brdir_rt_i;
 
   assign  bht_brdir_cert    = bpd_brdir_cert & bpd_brdir_we_cert; 
-  assign  bpd_ch_brdir      = bpd_brdir_cert ^ bob_ch_brdir_i;
-  assign  bpd_ch_we_cert    = bob_ch_we_i    & bpd_brdir_we_cert;
+  assign  bpd_ch_brdir      = bpd_brdir_cert ^ bob_chbrdir_i;
+  assign  bpd_ch_we_cert    = bob_chwe_i    & bpd_brdir_we_cert;
 
   // choice pht for the tourament branch predictor
   pht #(
@@ -92,7 +93,7 @@ module bpd(
     .LOG_INDEX          (12   ),
     .SATCNT_WIDTH       (2    ),
     .SATCNT_INIT        (2'b10))
-  pht_inst0(
+  choice_pht(
     .clock             (clock),
     .reset_n           (reset_n),
     .pht_rd_index_i    (pht_idx_spec),
@@ -132,10 +133,10 @@ module bpd(
       bhr <= 12'b0;
     else
       if (bpd_brdir_we_cert == 1'b1 && pipctl_flush_rt_i)
-        bhr <= { bob_bhr_r_i[10:0], bpd_brdir_cert };
+        bhr <= { bob_bhr_i[10:0], bpd_brdir_cert };
       else if (pipctl_flush_rt_i)
-        if ( bob_valid_r_i ) 
-          bhr <= bob_bhr_r_i;
+        if ( bob_valid_i ) 
+          bhr <= bob_bhr_i;
       else if ((brdec_brtyp_i== `BR_COND) & brdec_brext_i & (!fetch_instinvld_i))
         bhr <= { bhr[10:0], bpd_final_pred_o };
   end
@@ -147,7 +148,7 @@ module bpd(
     .LOG_INDEX         (12   ),
     .SATCNT_WIDTH      (2    ),
     .SATCNT_INIT       (2'b01))
-  pht_inst1(
+  global_pht(
     .clock             (clock),
     .reset_n           (reset_n),
     .pht_rd_index_i    (global_pht_rd_idx),
@@ -164,7 +165,7 @@ module bpd(
     .LOG_INDEX         (10    ),
     .SATCNT_WIDTH      (3     ),
     .SATCNT_INIT       (3'b011))
-  pht_inst2(
+  local_pht(
     .clock             (clock),
     .reset_n           (reset_n),
     .pht_rd_index_i    (local_pht_rd_idx),
@@ -174,21 +175,14 @@ module bpd(
     .pht_br_pred_o     (local_pred)
   );
 
-  assign global_pht_rd_idx = pc_f1_i[13:2] ^ bhr;
-  assign global_pht_wt_idx = bob_pc_r_i[13:2] ^ bob_bhr_r_i;
-  assign local_pht_rd_idx  = bht_lochist_f1; 
-  assign local_pht_wt_idx  = bob_lochist_i; 
-
-  assign bpd_final_pred_o  = pht_choice_f1 ? global_pred : local_pred;
-
 /* 
  * truth table for choice predictor update
  *         branch dir | 00001111
  *        global pred | 00110011
  *         local pred | 01010101
  * -------------------+----------
- * update choice pred | 01100110 (signal bpd_ch_we_o)
- *   update direction | x10xx01x (signal bpd_ch_brdir_o)
+ * update choice pred | 01100110 (signal bpd_chwe_o)
+ *   update direction | x10xx01x (signal bpd_chbrdir_o)
  * 
  * 1 = choose global predictor,
  * 0 = choose local predictor
@@ -196,10 +190,17 @@ module bpd(
  * So, update the choice predictor on (global_pred ^ local_pred) 
  *            the direction is (branch_dir ^ local_pred)
  */
-  assign bpd_ch_we_o = global_pred ^ local_pred;
-  assign bpd_ch_brdir_o = local_pred;
+  assign bpd_chwe_o = global_pred ^ local_pred;
+  assign bpd_chbrdir_o = local_pred;
 
   assign bpd_bhr_o = bhr;
   assign bpd_bht_o = bht_lochist_f1; 
+
+  assign global_pht_rd_idx = pc_f1_i[13:2] ^ bhr;
+  assign global_pht_wt_idx = bob_brpc_i[13:2] ^ bob_bhr_i;
+  assign local_pht_rd_idx  = bht_lochist_f1; 
+  assign local_pht_wt_idx  = bob_bht_i; 
+
+  assign bpd_final_pred_o  = pht_choice_f1 ? global_pred : local_pred;
 
 endmodule

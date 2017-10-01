@@ -70,7 +70,7 @@ module ace_fetch(
   reg  [63:0]                     bob_brpc_f1r;
   reg                             bob_brdir_f1r;
   reg                             bob_chwe_f1r;
-  reg                             bob_chdir_f1r;
+  reg                             bob_chbrdir_f1r;
   reg                             bob_valid_f1r;
   reg  [ 9:0]                     bob_bht_f1r;
   reg  [11:0]                     bob_bhr_f1r;
@@ -129,7 +129,7 @@ ras    ras_inst(
   .brdec_brtyp_f1_i       (brdec_brtyp_f1 ),
   .brdec_rasdat_f1_i      (brdec_rasdat_f1),
   .btb_hit_f0_i           (btb_hit_f0),
-  .btb_brdir_f1_i         (btb_brdir_f1       ), // attention
+  .btb_brdir_f1_i         (btb_brdir_f1      ), // attention
   .btb_rasctl_f0_i        (btb_rasctl_f0),
   .bob_rasptr_f1r_i       (bob_rasptr_f1r    ),
   .bob_vld_f1r_i          (bob_valid_f1r),
@@ -145,29 +145,30 @@ bpd bpd_inst(
   .pc_f0_i               (pc_f0                 ),
   .pc_f1_i               (pc_f1                 ),
   .pipctl_flush_rt_i     (flush_rt_r            ),
-  .pipctl_fill_f1_i      (pipctl_fill_f1       ),
+  .pipctl_fill_f1_i      (pipctl_fill_f1        ),
 
-  .brdec_brtyp_i       (brdec_brtyp_f1),
-  .brdec_brext_i       (brdec_brext_f1  ),
-  .fetch_instinvld_i   (fetch_instinvld_f1),
+  .brdec_brtyp_i         (brdec_brtyp_f1        ),
+  .brdec_brext_i         (brdec_brext_f1        ),
+  .fetch_instinvld_i     (fetch_instinvld_f1    ),
 
-  .brcond_vld_rt_i       (brcond_vld_rt_r ),
-  .brindir_vld_rt_i      (brindir_vld_rt_r),
-  .brdir_rt_i            (brdir_rt_r),
+  .brcond_vld_rt_i       (brcond_vld_rt_r       ),
+  .brindir_vld_rt_i      (brindir_vld_rt_r      ),
+  .brdir_rt_i            (brdir_rt_r            ),
 
-  .bob_pc_r_i            (bob_brpc_f1r            ),
-  .bob_valid_r_i         (bob_valid_f1r),
-  .bob_ch_we_i           (bob_chwe_f1r),
-  .bob_ch_brdir_i        (bob_chdir_f1r),
-  .bob_bhr_r_i           (bob_bhr_f1r),
-  .bob_lochist_i         (bob_bht_f1r),
+  .bob_brpc_i            (bob_brpc_f1r          ),
+  .bob_valid_i           (bob_valid_f1r         ),
 
-  .bpd_ch_we_o           (bpd_chwe_f1),
-  .bpd_ch_brdir_o        (bpd_chbrdir_f1),
-  .bpd_bhr_o             (bpd_bhr_f1),
-  .bpd_bht_o             (bpd_bht_f1),
+  .bob_chwe_i            (bob_chwe_f1r          ),
+  .bob_chbrdir_i         (bob_chbrdir_f1r       ),
+  .bob_bhr_i             (bob_bhr_f1r           ),
+  .bob_bht_i             (bob_bht_f1r           ),
 
-  .bpd_final_pred_o      (bpd_pred_f1)
+  .bpd_chwe_o            (bpd_chwe_f1           ),
+  .bpd_chbrdir_o         (bpd_chbrdir_f1        ),
+  .bpd_bhr_o             (bpd_bhr_f1            ),
+  .bpd_bht_o             (bpd_bht_f1            ),
+
+  .bpd_final_pred_o      (bpd_pred_f1           )
 );
 
 // figure out current instruction is an xRET or not
@@ -253,17 +254,17 @@ bob bob_inst(
   .fetch_btbmiss_i    (fetch_rasacc_btbmis),
 
   .bob_brdir_i        (bpd_pred_f1),
-  .bob_ch_we_i        (bpd_chwe_f1),
-  .bob_ch_ud_i        (bpd_chbrdir_f1),
-  .bob_lochist_i      (bpd_bht_f1),
+  .bob_chwe_i         (bpd_chwe_f1),
+  .bob_chbrdir_i      (bpd_chbrdir_f1),
+  .bob_bht_i          (bpd_bht_f1),
   .bob_bhr_i          (bpd_bhr_f1),
   .bob_rasptr_i       (fetch_rasptr_f1),
 
   .bob_brpc_o         (bob_brpc_f1),
   .bob_brdir_o        (bob_brdir_f1),
-  .bob_ch_we_o        (bob_chwe_f1),
-  .bob_ch_dir_o       (bob_chdir_f1),
-  .bob_lochist_o      (bob_bht_f1),
+  .bob_chwe_o         (bob_chwe_f1),
+  .bob_chbrdir_o      (bob_chdir_f1),
+  .bob_bht_o          (bob_bht_f1),
   .bob_bhr_o          (bob_bhr_f1),
   .bob_rasptr_o       (bob_rasptr_f1),
 
@@ -278,7 +279,7 @@ bob bob_inst(
       bob_brpc_f1r        <= 64'b0;
       bob_brdir_f1r       <=  1'b0;
       bob_chwe_f1r        <=  1'b0;
-      bob_chdir_f1r       <=  1'b0;
+      bob_chbrdir_f1r     <=  1'b0;
       bob_valid_f1r       <=  1'b0;
       bob_bht_f1r         <= 10'b0;
       bob_bhr_f1r         <= 12'b0;
@@ -293,7 +294,7 @@ bob bob_inst(
       bob_brpc_f1r        <= bob_brpc_f1;
       bob_brdir_f1r       <= bob_brdir_f1;
       bob_chwe_f1r        <= bob_chwe_f1;
-      bob_chdir_f1r       <= bob_chdir_f1;
+      bob_chbrdir_f1r     <= bob_chdir_f1;
       bob_valid_f1r       <= bob_valid_f1;
       bob_bht_f1r         <= bob_bht_f1;
       bob_bhr_f1r         <= bob_bhr_f1;
@@ -306,14 +307,8 @@ bob bob_inst(
     end
   end
 
-
-
-  assign pipctl_fill_f1     = (~instbuf_full_i & ~bob_stall_f1) | flush_rt_i;
-  assign fetch_instinvld_f1 = ~pipctl_fill_f1    | icache_stall_f1
-                              |flush_rt_i        | flush_rt_r
-                              |override_vld_f1_o | bob_stall_f1;
-
-  assign fetch_rasacc_btbmis = (brdec_rasctl_f1 != 2'b00) && ~btb_brdir_f1 && ~fetch_instinvld_f1;
+  // figure out what the taken PC is
+  assign pc_f1_t = ((brdec_brtyp_f1==`BR_INDIRRET) & brdec_brext_f1) ? btb_br_tar_f1 : brdec_brtar_f1;
 
   always @ *
   begin
@@ -328,8 +323,13 @@ bob bob_inst(
     3'b111: pc_f1_nt = pc_f1 + 64'h1c;
     endcase
   end
-  // figure out what the taken PC is
-  assign pc_f1_t = ((brdec_brtyp_f1==`BR_INDIRRET)&brdec_brext_f1) ? btb_br_tar_f1 : brdec_brtar_f1;
+  // fetch stage pipeline enable control
+  assign pipctl_fill_f1     = (~instbuf_full_i & ~bob_stall_f1) | flush_rt_i;
+  assign fetch_instinvld_f1 = ~pipctl_fill_f1    | icache_stall_f1
+                              |flush_rt_i        | flush_rt_r
+                              |override_vld_f1_o | bob_stall_f1;
+
+  assign fetch_rasacc_btbmis = (brdec_rasctl_f1 != 2'b00) & ~btb_brdir_f1 & ~fetch_instinvld_f1;
 
   assign br_uncond     = (brdec_brtyp_f1 == `BR_UNCOND) & ~btb_brdir_f1   & ~fetch_instinvld_f1;
   assign br_cond       = (brdec_brtyp_f1 == `BR_COND)   &  brdec_brext_f1 & ~fetch_instinvld_f1;
