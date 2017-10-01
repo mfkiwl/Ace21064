@@ -10,12 +10,10 @@
 `define SNT               2'b11 // Strong Not-taken
 
 // branch types
-`define BR_COND		      2'b00  // conditional jump
-`define BR_UNCOND	      2'b01  // unconditional jump
-`define BR_INDIR_PC	      2'b10  // indirectory jump, PC relative
-`define BR_INDIR_RS	      2'b11  // indirectory jump, RS relative
-
-`define BR_INDIR_RAS	  2'b11  // temporary 
+`define BR_COND           2'b00  // conditional jump   eg. BEQ
+`define BR_UNCOND         2'b01  // unconditional jump eg. JAL
+`define BR_INDIR          2'b10  // indirectory jump   eg. JALR
+`define BR_INDIRRET       2'b11  // indirectory jump, function return eg. URET
 
 
 `define RV32I_BRANCH      7'b1100011

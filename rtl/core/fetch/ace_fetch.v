@@ -171,11 +171,11 @@ bpd bpd_inst(
 );
 
 // figure out current instruction is an xRET or not
-assign ras_pop_f0  = (btb_brtyp_f0==`BR_INDIR_RAS) & btb_hit_f0 & ras_vld_f0;
+assign ras_pop_f0  = (btb_brtyp_f0==`BR_INDIRRET) & btb_hit_f0 & ras_vld_f0;
 
 // btb hit, predict taken, redirect to the predicted taken address
 // btb hit, predict not-taken, redirect to the address after the branch
-assign btb_data_f0 = btb_brdir_f0 ? btb_brtar_f0 : (pc_f0 + (btb_brpos_f0 << 2) + 4));
+assign btb_data_f0 = btb_brdir_f0 ? btb_brtar_f0 : (pc_f0 + (btb_brpos_f0 << 2) + 4);
 
 // miss in btb, go to the fall through address(pc_f0+32).
 assign nxt_pc_f0_tmp   = btb_hit_f0 ? btb_data_f0 : pc_f0+32;
@@ -329,12 +329,12 @@ bob bob_inst(
     endcase
   end
   // figure out what the taken PC is
-  assign pc_f1_t = ((brdec_brtyp_f1==`BR_INDIR_RAS)&brdec_brext_f1) ? btb_br_tar_f1 : brdec_brtar_f1;
+  assign pc_f1_t = ((brdec_brtyp_f1==`BR_INDIRRET)&brdec_brext_f1) ? btb_br_tar_f1 : brdec_brtar_f1;
 
-  assign fixme0       = (brdec_brtyp_f1==`BR_UNCOND)  & ~btb_brdir_f1  & ~fetch_instinvld_f1;
-  assign fixme1       = (brdec_brtyp_f1 == `BR_COND)   & brdec_brext_f1& ~fetch_instinvld_f1;
-  assign override_pc_f1_o  = fetch_rasacc_btbmis ? pc_f1 : (fixme0 ? pc_f1_t : bpd_pred_f1 ? pc_f1_t : pc_f1_nt); 
-  assign override_vld_f1_o = (bpd_pred_f1^btb_brdir_f1) & fixme0 | fixme1 | fetch_rasacc_btbmis;
+  assign br_uncond     = (brdec_brtyp_f1 == `BR_UNCOND) & ~btb_brdir_f1   & ~fetch_instinvld_f1;
+  assign br_cond       = (brdec_brtyp_f1 == `BR_COND)   &  brdec_brext_f1 & ~fetch_instinvld_f1;
+  assign override_pc_f1_o  = fetch_rasacc_btbmis ? pc_f1 : (br_uncond ? pc_f1_t : bpd_pred_f1 ? pc_f1_t : pc_f1_nt); 
+  assign override_vld_f1_o = (bpd_pred_f1^btb_brdir_f1) & br_uncond | br_cond | fetch_rasacc_btbmis;
 
 
   // figure out how many insts we're keeping

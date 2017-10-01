@@ -156,7 +156,7 @@ module btb_way (
     else if (btb_cm_we) begin // whenever retire wants to update an entry
       btb_cnt[idx_rt] <= btb_rt_pred;
       // we only need to update the taken addr if it's a register jump
-      if (btb_br_typ[idx_rt] == `BR_INDIR_RAS || btb_br_typ[idx_rt] == `BR_INDIR_PC)
+      if (btb_br_typ[idx_rt] == `BR_INDIRRET || btb_br_typ[idx_rt] == `BR_INDIR)
         btb_br_tar[idx_rt] <= btb_rt_brtar_i;
     end
   end

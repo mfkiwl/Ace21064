@@ -86,14 +86,14 @@ module brdec_way(
         // JAL/JALR
         `RV32I_JAL:  begin
                        br_flag_o       = 1'b1;
-                       br_typ_o        = `BR_INDIR_PC;
+                       br_typ_o        = `BR_UNCOND;
                        br_tar_o        = pc_f1_i + jal_offset_s;
                        ras_ctl_o       = 2'b00;	// RAS: no action
                        rs1_req_o       = 1'b0;
                      end
         `RV32I_JALR: begin
                        br_flag_o       = 1'b1;
-                       br_typ_o        = `BR_INDIR_RS;
+                       br_typ_o        = `BR_INDIR;
                        br_tar_o        = rs1_data_i + jalr_offset_s;
                        ras_ctl_o       = 2'b01;	// RAS: push PC (function call?)
                        rs1_req_o       = 1'b1;
@@ -103,7 +103,7 @@ module brdec_way(
                        if(funct3 == `RV32I_FUNCT3_PRIV && funct12 == `RV32I_FUNCT12_URET)
                        begin
                          br_flag_o     = 1'b1;
-                         br_typ_o      = `BR_INDIR_RAS;
+                         br_typ_o      = `BR_INDIRRET;
                          br_tar_o      = ras_data_i;
                          ras_ctl_o     = 2'b10;	// RAS: pop 
                          rs1_req_o     = 1'b0;
