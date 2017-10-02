@@ -6,7 +6,8 @@
 //  Description : Branch Target Buffer
 //                Maintain a table of branch targets and other information
 //                about recently branches
-//                width 129
+//                data array width 73
+//                tag array width 18 (64-8)/4
 // (valid,tag_f0,branch position,branch type,branch taken addr, 2bit counter, ras conrtol)
 //                depth 256 (2^8)
 //                
@@ -44,8 +45,11 @@ module btb_way (
   localparam BTB_CNT_INIT=2'b01;
 
   // these are the values stored in the BTB
-  reg [53:0]   btb_tag     [0:255];  // also called BIA (branch instruction address)
-
+  //
+  // Also named BIA (branch instruction address)
+  // which should be 64-10 = 54 bits, to reduce area and improve
+  // performance the tag(BIA) is xored by each 18bits
+  reg [17:  0] btb_tag     [0:255];  
   reg [ 0:255] btb_valid;
   reg [ 1:  0] btb_ras_ctl [0:255];
   reg [ 1:  0] btb_cnt     [0:255];
@@ -53,38 +57,36 @@ module btb_way (
   reg [ 1:  0] btb_br_typ  [0:255];
   reg [63:  0] btb_br_tar  [0:255];  // also called BTA (branch target address)
 
-  wire idx_f0[7:0]    = pc_f0_i[9:2];   // 256 entries each way
-  wire tag_f0[53:0]   = pc_f0_i[63:10]; // least used as tag_f0 data (should be cut down to 40 bit)
+  wire idx_f0[7:0]    = pc_f0_i[9:2];   // 256 entries each way (one instruction per entry)
+  wire tag_f0[17:0]   = {pc_f0_i[63:46] ^ pc_f0_i[45:28] ^ pc_f0_i[27:10]}; // least used as tag_f0 data
 
   // set temp variables for new entries from fetch1
-  wire pc_f1[63:0]    = btb_brpc_spec_i;
-  wire idx_f1[7:0]    = pc_f1[ 9: 2];
-  wire tag_f1[53:0]   = pc_f1[63:10];
+  wire idx_spec[7:0]    = btb_brpc_spec_i[ 9: 2];
+  wire tag_spec[53:0]   = btb_brpc_spec_i[63:10];
   // set temp variables for btb updates from retire stage
-  wire pc_rt[63:0]    = btb_brpc_cert_i;
-  wire idx_rt[7:0]    = pc_rt[ 9: 2];
-  wire tag_rt[53:0]   = pc_rt[63:10];
+  wire idx_cert[7:0]    = btb_brpc_cert_i[ 9: 2];
+  wire tag_cert[53:0]   = btb_brpc_cert_i[63:10];
 
   // new entry coming in that matches requested entry, bypass it
   // speculative update btb enable, and 
-  wire btb_sp_bypass_en = (btb_we_spec_i == 1'b1) && (pc_f0_i == pc_f1) &&
-                          ((btb_valid[idx_f1] != 1'b1) || (tag_f1 != btb_tag[idx_f1]));                       
+  wire btb_bypass_spec = (btb_we_spec_i == 1'b1) && (pc_f0_i == btb_brpc_spec_i) &&
+                          ((btb_valid[idx_spec] != 1'b1) || (tag_spec != btb_tag[idx_spec]));                       
   // entry being updated, pass along the info
-  wire btb_cm_bypass_en = (btb_we_cert_i == 1'b1) && (pc_f0_i == pc_rt) &&
-                          ((btb_valid[idx_rt] == 1'b1) && (btb_tag[idx_rt] == tag_f0));
+  wire btb_bypass_cert = (btb_we_cert_i == 1'b1) && (pc_f0_i == btb_brpc_cert_i) &&
+                          ((btb_valid[idx_cert] == 1'b1) && (btb_tag[idx_cert] == tag_f0));
 
   // if this PC's tag matches the tag stored in the BTB then it is a hit
-  wire btb_hit_vld      = (tag_f0 == btb_tag[idx_f0]) && btb_valid[idx_f0];
+  wire btb_hit      = (tag_f0 == btb_tag[idx_f0]) && btb_valid[idx_f0];
 
   // cm bypass btb prediction result, only decrement on NT conditional branches
-  wire btb_cm_pred[1:0] = (btb_brdir_cert_i == 1'b1) ? sat_inc(btb_cnt[idx_f0]) :
+  wire btb_pred_f0[1:0] = (btb_brdir_cert_i == 1'b1) ? sat_inc(btb_cnt[idx_f0]) :
                           ((btb_br_typ[idx_f0] == `BR_COND) ? sat_dec(btb_cnt[idx_f0])
                                                             : btb_cnt[idx_f0]);
 
   // only decrement on NT conditional branches
-  wire btb_rt_pred[1:0] = (btb_brdir_cert_i == 1'b1) ? sat_inc(btb_cnt[idx_rt]) :
-                          ((btb_br_typ[idx_rt] == `BR_COND) ? sat_dec(btb_cnt[idx_rt])
-                                                            : btb_cnt[idx_rt]);
+  wire btb_pred_cert[1:0] = (btb_brdir_cert_i == 1'b1) ? sat_inc(btb_cnt[idx_cert]) :
+                          ((btb_br_typ[idx_cert] == `BR_COND) ? sat_dec(btb_cnt[idx_cert])
+                                                            : btb_cnt[idx_cert]);
 
   // whenever the pc_f0_i changes, read from the BTB
   // and calculate new output signals
@@ -96,7 +98,7 @@ module btb_way (
     btb_brtyp_f0_o   =  2'h0;
     btb_brtar_f0_o   = 64'h0;
     btb_brdir_f0_o   =  1'b0;
-    if (btb_sp_bypass_en) begin
+    if (btb_bypass_spec) begin
       btb_hit_f0_o  = 1'b1;
       btb_rasctl_f0_o = btb_rasctl_i;
       btb_brpos_f0_o  = btb_brpos_spec_i;
@@ -104,15 +106,15 @@ module btb_way (
       btb_brtar_f0_o  = btb_brtar_spec_i;
       btb_brdir_f0_o  = (BTB_CNT_INIT >= 2'b10) ? 1'b1 : 1'b0;
     end
-    else if (btb_cm_bypass_en) begin
+    else if (btb_bypass_cert) begin
       btb_hit_f0_o  = 1'b1;
       btb_brtar_f0_o  = btb_brtar_cert_i;
       btb_brpos_f0_o  = btb_br_pos[idx_f0];
       btb_brtyp_f0_o  = btb_br_typ[idx_f0];
       btb_rasctl_f0_o = btb_ras_ctl[idx_f0];
-      btb_brdir_f0_o  = btb_cm_pred[1];
+      btb_brdir_f0_o  = btb_pred_f0[1];
     end
-    else if (btb_hit_vld) begin
+    else if (btb_hit) begin
       btb_hit_f0_o  = 1'b1;
       btb_rasctl_f0_o = btb_ras_ctl[idx_f0];
       btb_brpos_f0_o  = btb_br_pos[idx_f0];
@@ -123,12 +125,12 @@ module btb_way (
   end
 
   // if there's no valid entry OR the tags are different, write the entry
-  wire btb_sp_we = btb_we_spec_i && // btb write enable
-                   (!btb_valid[idx_f1] || (tag_f1 != btb_tag[idx_f1]));
+  wire btb_we_spec = btb_we_spec_i && // btb write enable
+                    (!btb_valid[idx_spec] || (tag_spec != btb_tag[idx_spec]));
 
   // if the entry is valid and the tags match, update the entry
-  wire btb_cm_we = btb_we_cert_i && // btb update enable
-                   (btb_valid[idx_rt] && (tag_rt == btb_tag[idx_rt]));
+  wire btb_we_cert = btb_we_cert_i && // btb update enable
+                    (btb_valid[idx_cert] && (tag_cert == btb_tag[idx_cert]));
 
   // add or update a btb entry
   always @(posedge clock or negedge reset_n)
@@ -143,25 +145,25 @@ module btb_way (
         btb_br_typ[i]   <=  2'h0;
         btb_br_tar[i]   <= 64'h0;
       end
-    else if (btb_sp_we) begin // write a new entry into the btb
-      btb_tag[idx_f1]         <= tag_f1;
-      btb_valid[idx_f1]       <= 1'b1;
-      btb_cnt[idx_f1]         <= (btb_brtyp_spec_i == `BR_COND) ? BTB_CNT_INIT : 2'b11;
-      btb_ras_ctl[idx_f1]     <= btb_rasctl_i;
-      btb_br_pos[idx_f1]      <= btb_brpos_spec_i;
-      btb_br_typ[idx_f1]      <= btb_brtyp_spec_i;
-      btb_br_tar[idx_f1]      <= btb_brtar_spec_i;
+    else if (btb_we_spec) begin // write a new entry into the btb
+      btb_tag[idx_spec]         <= tag_spec;
+      btb_valid[idx_spec]       <= 1'b1;
+      btb_cnt[idx_spec]         <= (btb_brtyp_spec_i == `BR_COND) ? BTB_CNT_INIT : 2'b11;
+      btb_ras_ctl[idx_spec]     <= btb_rasctl_i;
+      btb_br_pos[idx_spec]      <= btb_brpos_spec_i;
+      btb_br_typ[idx_spec]      <= btb_brtyp_spec_i;
+      btb_br_tar[idx_spec]      <= btb_brtar_spec_i;
       // any non-conditional branch is always taken
     end
-    else if (btb_cm_we) begin // whenever retire wants to update an entry
-      btb_cnt[idx_rt] <= btb_rt_pred;
+    else if (btb_we_cert) begin // whenever retire wants to update an entry
+      btb_cnt[idx_cert] <= btb_pred_cert;
       // we only need to update the taken addr if it's a register jump
-      if (btb_br_typ[idx_rt] == `BR_INDIRRET || btb_br_typ[idx_rt] == `BR_INDIR)
-        btb_br_tar[idx_rt] <= btb_brtar_cert_i;
+      if (btb_br_typ[idx_cert] == `BR_INDIRRET || btb_br_typ[idx_cert] == `BR_INDIR)
+        btb_br_tar[idx_cert] <= btb_brtar_cert_i;
     end
   end
 
-  assign btb_hit_f1_o = btb_valid[idx_f1] && ( btb_tag[idx_f1] == tag_f1 );
+  assign btb_hit_f1_o = btb_valid[idx_spec] && ( btb_tag[idx_spec] == tag_spec );
 
   /////////////////////////////////////////////////////////////
   // saturated increment
