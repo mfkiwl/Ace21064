@@ -6,4 +6,5 @@ xxx_yyy_zz_w
 [zz]  singal pipeline stage information
 [w]   signal direction identifier
 
-eg: bob_lochist_f1_o
+eg: bob_bht_f1_o
+    bht value (branch local history) from bob module which is in fetch stage1

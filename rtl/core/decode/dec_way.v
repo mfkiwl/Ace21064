@@ -136,36 +136,36 @@ module dec_way(
                          alu_op_o = alu_op_arith;
                          need_rd_o = 1'b1;
                      end
-    /*
-        `RV32I_SYSTEM : begin
-           wb_src_sel_DX = `WB_SRC_CSR;
-           need_rd_o = (funct3 != `RV32I_FUNCT3_PRIV);
-           case (funct3)
-             `RV32I_FUNCT3_PRIV : begin
-                if ((rs1_o == 0) && (reg_to_wr_DX == 0)) begin
-                   case (funct12)
-                     `RV32I_FUNCT12_ECALL : ecall = 1'b1;
-                     `RV32I_FUNCT12_EBREAK : ebreak = 1'b1;
-                     `RV32I_FUNCT12_ERET : begin
-                        if (prv == 0)
-                          illegal_inst_o = 1'b1;
-                        else
-                          eret_unkilled = 1'b1;
-                     end
-                     default : illegal_inst_o = 1'b1;
-                   endcase // case (funct12)
-                end // if ((rs1_o == 0) && (reg_to_wr_DX == 0))
-             end // case: `RV32I_FUNCT3_PRIV
-             `RV32I_FUNCT3_CSRRW : csr_cmd = (rs1_o == 0) ? `CSR_READ : `CSR_WRITE;
-             `RV32I_FUNCT3_CSRRS : csr_cmd = (rs1_o == 0) ? `CSR_READ : `CSR_SET;
-             `RV32I_FUNCT3_CSRRC : csr_cmd = (rs1_o == 0) ? `CSR_READ : `CSR_CLEAR;
-             `RV32I_FUNCT3_CSRRWI : csr_cmd = (rs1_o == 0) ? `CSR_READ : `CSR_WRITE;
-             `RV32I_FUNCT3_CSRRSI : csr_cmd = (rs1_o == 0) ? `CSR_READ : `CSR_SET;
-             `RV32I_FUNCT3_CSRRCI : csr_cmd = (rs1_o == 0) ? `CSR_READ : `CSR_CLEAR;
-             default : illegal_inst_o = 1'b1;
-           endcase // case (funct3)
-        end
-     */
+/*
+      `RV32I_SYSTEM : begin
+         wb_src_sel_DX = `WB_SRC_CSR;
+         need_rd_o = (funct3 != `RV32I_FUNCT3_PRIV);
+         case (funct3)
+           `RV32I_FUNCT3_PRIV : begin
+              if ((rs1_o == 0) && (reg_to_wr_DX == 0)) begin
+                 case (funct12)
+                   `RV32I_FUNCT12_ECALL : ecall = 1'b1;
+                   `RV32I_FUNCT12_EBREAK : ebreak = 1'b1;
+                   `RV32I_FUNCT12_ERET : begin
+                      if (prv == 0)
+                        illegal_inst_o = 1'b1;
+                      else
+                        eret_unkilled = 1'b1;
+                   end
+                   default : illegal_inst_o = 1'b1;
+                 endcase
+              end
+           end
+           `RV32I_FUNCT3_CSRRW : csr_cmd = (rs1_o == 0) ? `CSR_READ : `CSR_WRITE;
+           `RV32I_FUNCT3_CSRRS : csr_cmd = (rs1_o == 0) ? `CSR_READ : `CSR_SET;
+           `RV32I_FUNCT3_CSRRC : csr_cmd = (rs1_o == 0) ? `CSR_READ : `CSR_CLEAR;
+           `RV32I_FUNCT3_CSRRWI : csr_cmd = (rs1_o == 0) ? `CSR_READ : `CSR_WRITE;
+           `RV32I_FUNCT3_CSRRSI : csr_cmd = (rs1_o == 0) ? `CSR_READ : `CSR_SET;
+           `RV32I_FUNCT3_CSRRCI : csr_cmd = (rs1_o == 0) ? `CSR_READ : `CSR_CLEAR;
+           default : illegal_inst_o = 1'b1;
+         endcase
+      end
+*/
      `RV32I_AUIPC: begin
                       use_rs1_o = 1'b0;
                       src_a_sel_o = `SRC_A_PC;
