@@ -22,9 +22,8 @@ module bpd(
   input  wire                     pipctl_flush_rt_i,
   input  wire                     pipctl_fill_f1_i,
   // bhr shift enable
-  input  wire                     brdec_brtyp_i,
-  input  wire                     brdec_brext_i,
-  input  wire                     fetch_instinvld_i,
+  input  wire                     br_uncond_f1_i,
+  input  wire                     br_cond_f1_i,
   // from retire stage, which offers cert information about branch
   input  wire                     brcond_vld_rt_i,
   input  wire                     brindir_vld_rt_i,
@@ -137,7 +136,7 @@ module bpd(
       else if (pipctl_flush_rt_i)
         if ( bob_valid_i ) 
           bhr <= bob_bhr_i;
-      else if ((brdec_brtyp_i== `BR_COND) & brdec_brext_i & (!fetch_instinvld_i))
+      else if (br_cond_f1_i)
         bhr <= { bhr[10:0], bpd_final_pred_o };
   end
 

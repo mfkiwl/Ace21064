@@ -16,14 +16,11 @@ module brdec_way(
   input wire  [31:0]      inst_i,
   input wire  [63:0]      pc_f1_i,
   input wire  [63:0]      ras_data_i,
-  input wire  [63:0]      rs1_data_i, // rs1 data ack
 
   output reg              br_flag_o,
   output reg  [ 1:0]      br_typ_o,
   output reg  [63:0]      br_tar_o,
-  output reg  [ 1:0]      ras_ctl_o,
-  output wire [ 4:0]      rs1_idx_o, // rs1 index
-  output reg              rs1_req_o  // rs1 data request
+  output reg  [ 1:0]      ras_ctl_o
 );
 
   localparam RAS_NOACT    = 2'b00;
@@ -42,7 +39,6 @@ module brdec_way(
   assign opcode        = inst_i[ 6: 0];
   assign funct3        = inst_i[14:12];
   assign funct12       = inst_i[31:20];
-  assign rs1_idx_o     = inst_i[19:15];
   assign br_offset_s   = {{52{inst_i[31]}},inst_i[7],inst_i[30:25],inst_i[11:8],1'b0};
   assign br_offset_u   = {{51{1'b0}},inst_i[31],inst_i[7],inst_i[30:25],inst_i[11:8],1'b0};
   assign jal_offset_s  = {{44{inst_i[31]}},inst_i[19:12],inst_i[20],inst_i[30:21],1'b0};
@@ -54,7 +50,6 @@ module brdec_way(
       br_typ_o   = 2'b00;
       br_tar_o   = 64'b0;
       ras_ctl_o  = 2'b00;
-      rs1_req_o  = 1'b0;
 
       case (opcode)
         // conditional branches
@@ -62,7 +57,6 @@ module brdec_way(
         `RV32I_BRANCH: begin
                          br_typ_o      = `BR_COND;
                          ras_ctl_o     = 2'b00; // RAS no action
-                         rs1_req_o     = 1'b0;
                          case(funct3)
                            `RV32I_FUNCT3_BEQ,
                            `RV32I_FUNCT3_BNE,
@@ -88,15 +82,14 @@ module brdec_way(
                        br_flag_o       = 1'b1;
                        br_typ_o        = `BR_UNCOND;
                        br_tar_o        = pc_f1_i + jal_offset_s;
-                       ras_ctl_o       = 2'b00;	// RAS: no action
-                       rs1_req_o       = 1'b0;
+                       ras_ctl_o       = 2'b01;	// RAS: push PC (near call) 
                      end
         `RV32I_JALR: begin
                        br_flag_o       = 1'b1;
                        br_typ_o        = `BR_INDIR;
-                       br_tar_o        = rs1_data_i + jalr_offset_s;
-                       ras_ctl_o       = 2'b01;	// RAS: push PC (function call?)
-                       rs1_req_o       = 1'b1;
+                       //br_tar_o        = rs1_data_i + jalr_offset_s;
+                       br_tar_o        = jalr_offset_s; // this br_tar may not be used
+                       ras_ctl_o       = 2'b01;	// RAS: push PC (far call)
                      end
         // user mode system return
         `RV32_SYSTEM:begin
@@ -106,7 +99,6 @@ module brdec_way(
                          br_typ_o      = `BR_INDIRRET;
                          br_tar_o      = ras_data_i;
                          ras_ctl_o     = 2'b10;	// RAS: pop 
-                         rs1_req_o     = 1'b0;
                        end
                      end
         default:     ; 

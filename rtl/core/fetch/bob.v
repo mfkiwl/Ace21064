@@ -24,10 +24,8 @@ module bob(
   input  wire             brcond_vld_rt_i,
   input  wire             brindir_vld_rt_i,
 
-  input  wire             brdec_brtyp_i,
-  input  wire             brdec_brext_i,
-  input  wire             fetch_instinvld_i,
-  input  wire             fetch_btbmiss_i,
+  input  wire             br_uncond_f1_i,
+  input  wire             br_cond_f1_i,
 
   input  wire             bob_brdir_i,
   input  wire             bob_chwe_i,
@@ -117,11 +115,7 @@ module bob(
     end
   end
 
-  assign bob_we      = (brdec_brtyp_i != `BR_UNCOND) && 
-                        brdec_brext_i &&
-                       (!fetch_instinvld_i) &&
-                       (!fetch_btbmiss_i) &&
-                       (~(&bob_windex)); // write valid, and bob not full
+  assign bob_we      = br_uncond_f1_i & (~(&bob_windex)); // write valid, and bob not full
   assign bob_re      = brcond_vld_rt_i || brcond_vld_rt_i && entry_valid[bob_rindex];
 
   assign bob_stall_o = &bob_windex;

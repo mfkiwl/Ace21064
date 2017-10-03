@@ -50,10 +50,10 @@ module ace_fetch(
   output reg [31:0]              inst7_d0_o
 );
 
-  reg  [ 7:0]                     instvld_f0_tmp;
-  reg  [ 7:0]                     instvld_f0;
-  reg  [ 7:0]                     instvld_f1;
-  wire [ 7:0]                     instvld_f1_tmp;
+  reg  [ 7:0]                     btb_instvld_f0_tmp;
+  reg  [ 7:0]                     btb_instvld_f0;
+  reg  [ 7:0]                     btb_instvld_f1;
+  wire [ 7:0]                     instvld_f1;
 
   wire                            btb_hit_f0;
   wire [ 2:0]                     btb_brpos_f0;
@@ -63,7 +63,6 @@ module ace_fetch(
   reg  [63:0]                     btb_br_tar_f1;
   reg                             btb_brdir_f1;
 
-  wire                            ras_vld_f0;
   wire [63:0]                     ras_data_f0;
 
   wire                            bob_stall_f1;
@@ -123,18 +122,22 @@ ras    ras_inst(
   .clock                  (clock),
   .reset_n                (reset_n),
   .flush_rt_i             (flush_rt_i),
-  .invalid_f1_i           (fetch_instinvld_f1),
+  .invalid_f1_i           (inst_invld_f1),
   .icache_stall_i         (icache_stall_i),
-  .bpd_override_i         (bpd_override     ),
+
+  .bpd_pred_f1_i          (bpd_pred_f1),
+
   .brdec_brtyp_f1_i       (brdec_brtyp_f1 ),
   .brdec_rasdat_f1_i      (brdec_rasdat_f1),
+
   .btb_hit_f0_i           (btb_hit_f0),
   .btb_brdir_f1_i         (btb_brdir_f1      ), // attention
   .btb_rasctl_f0_i        (btb_rasctl_f0),
+
   .bob_rasptr_f1r_i       (bob_rasptr_f1r    ),
   .bob_vld_f1r_i          (bob_valid_f1r),
+
   .ras_data_f0_o          (ras_data_f0),
-  .ras_vld_f0_o           (ras_vld_f0         ),
   .ras_ptr_f0_o           (ras_ptr_f0        )
 );
 
@@ -147,9 +150,8 @@ bpd bpd_inst(
   .pipctl_flush_rt_i     (flush_rt_r            ),
   .pipctl_fill_f1_i      (pipctl_fill_f1        ),
 
-  .brdec_brtyp_i         (brdec_brtyp_f1        ),
-  .brdec_brext_i         (brdec_brext_f1        ),
-  .fetch_instinvld_i     (fetch_instinvld_f1    ),
+  .br_uncond_f1_i        (br_uncond_f1 ),
+  .br_cond_f1_i          (br_cond_f1   ),
 
   .brcond_vld_rt_i       (brcond_vld_rt_r       ),
   .brindir_vld_rt_i      (brindir_vld_rt_r      ),
@@ -172,7 +174,7 @@ bpd bpd_inst(
 );
 
 // figure out current instruction is an xRET or not
-assign ras_pop_f0  = (btb_brtyp_f0==`BR_INDIRRET) & btb_hit_f0 & ras_vld_f0;
+assign ras_pop_f0  = (btb_brtyp_f0==`BR_INDIRRET) & btb_hit_f0;
 
 // btb hit, predict taken, redirect to the predicted taken address
 // btb hit, predict not-taken, redirect to the address after the branch
@@ -185,20 +187,21 @@ assign nxt_pc_f0_tmp   = btb_hit_f0 ? btb_data_f0 : pc_f0+32;
 assign nxt_pc_f0_o = ras_pop_f0 ? ras_data_f0 : nxt_pc_f0_tmp;
 
 // btb hit, predict taken or using the RAS, invalidate the instructions after the branch
+// instruction before branch
 always @ *
 begin
   case (btb_brpos_f0)
-      3'b000 : instvld_f0_tmp = 8'h01; 
-      3'b001 : instvld_f0_tmp = 8'h03; 
-      3'b010 : instvld_f0_tmp = 8'h07; 
-      3'b011 : instvld_f0_tmp = 8'h0f; 
-      3'b100 : instvld_f0_tmp = 8'h1f; 
-      3'b101 : instvld_f0_tmp = 8'h3f; 
-      3'b110 : instvld_f0_tmp = 8'h7f; 
-      3'b111 : instvld_f0_tmp = 8'hff; 
+      3'b000 : btb_instvld_f0_tmp = 8'h01; 
+      3'b001 : btb_instvld_f0_tmp = 8'h03; 
+      3'b010 : btb_instvld_f0_tmp = 8'h07; 
+      3'b011 : btb_instvld_f0_tmp = 8'h0f; 
+      3'b100 : btb_instvld_f0_tmp = 8'h1f; 
+      3'b101 : btb_instvld_f0_tmp = 8'h3f; 
+      3'b110 : btb_instvld_f0_tmp = 8'h7f; 
+      3'b111 : btb_instvld_f0_tmp = 8'hff; 
   endcase
 end
-assign instvld_f0 = btb_hit_f0 ? instvld_f0_tmp : 8'hff;
+assign btb_instvld_f0 = btb_hit_f0 ? btb_instvld_f0_tmp : 8'hff;
 
 /* pipeline registers between fetch stage0 and fetch stage1 */
 always @ (posedge clock or negedge reset_n)
@@ -206,14 +209,14 @@ begin
   if (!reset_n) begin
     btb_br_tar_f1    <= 64'b0;
     btb_brdir_f1     <=  1'b0;
-    instvld_f1       <=  8'b0;
+    btb_instvld_f1     <=  8'b0;
     fetch_rasptr_f1  <=  4'b0; 
     icache_stall_f1  <=  1'b0;
   end
   else if (pipctl_fill_f1) begin
     btb_br_tar_f1    <= btb_brtar_f0;
     btb_brdir_f1     <= btb_brdir_f0;
-    instvld_f1       <= instvld_f0;
+    btb_instvld_f1     <= btb_instvld_f0;
     fetch_rasptr_f1  <= ras_ptr_f0;
     icache_stall_f1  <= icache_stall_i;
   end
@@ -230,7 +233,7 @@ brdec brdec_inst(
   .inst5_i            (inst5_f1            ),
   .inst6_i            (inst6_f1            ),
   .inst7_i            (inst7_f1            ),
-  .flush_vld_i        (fetch_instinvld_f1  ), // debug: is override_vld can
+  .flush_vld_i        (inst_invld_f1  ), // debug: is override_vld can
   .ras_pcdata_f0_i    (ras_data_f0         ),
   .brdec_rasdat_f1_o  (brdec_rasdat_f1     ),
   .brdec_rasctl_f1_o  (brdec_rasctl_f1     ),
@@ -249,9 +252,8 @@ bob bob_inst(
   .brcond_vld_rt_i    (brcond_vld_rt_r ),
   .brindir_vld_rt_i   (brindir_vld_rt_r),
   .brdec_brtyp_i      (brdec_brtyp_f1),
-  .brdec_brext_i      (brdec_brext_f1  ),
-  .fetch_instinvld_i  (fetch_instinvld_f1),
-  .fetch_btbmiss_i    (fetch_rasacc_btbmis),
+  .br_uncond_f1_i     (br_uncond_f1),
+  .br_cond_f1_i       (br_cond_f1),
 
   .bob_brdir_i        (bpd_pred_f1),
   .bob_chwe_i         (bpd_chwe_f1),
@@ -324,21 +326,22 @@ bob bob_inst(
     endcase
   end
   // fetch stage pipeline enable control
-  assign pipctl_fill_f1     = (~instbuf_full_i & ~bob_stall_f1) | flush_rt_i;
-  assign fetch_instinvld_f1 = ~pipctl_fill_f1    | icache_stall_f1
-                              |flush_rt_i        | flush_rt_r
-                              |override_vld_f1_o | bob_stall_f1;
+  assign pipctl_fill_f1 = ~instbuf_full_i & ~bob_stall_f1;
+  assign inst_invld_f1  = instbuf_full_i | flush_rt_r | icache_stall_f1 | bob_stall_f1;
 
-  assign fetch_rasacc_btbmis = (brdec_rasctl_f1 != 2'b00) & ~btb_brdir_f1 & ~fetch_instinvld_f1;
-
-  assign br_uncond     = (brdec_brtyp_f1 == `BR_UNCOND) & ~btb_brdir_f1   & ~fetch_instinvld_f1;
-  assign br_cond       = (brdec_brtyp_f1 == `BR_COND)   &  brdec_brext_f1 & ~fetch_instinvld_f1;
-  assign override_pc_f1_o  = fetch_rasacc_btbmis ? pc_f1 : (br_uncond ? pc_f1_t : bpd_pred_f1 ? pc_f1_t : pc_f1_nt); 
-  assign override_vld_f1_o = (bpd_pred_f1^btb_brdir_f1) & br_uncond | br_cond | fetch_rasacc_btbmis;
+  assign br_uncond_f1      = (brdec_brtyp_f1 == `BR_UNCOND) & brdec_brext_f1;
+  assign br_cond_f1        = (brdec_brtyp_f1 == `BR_COND)   & brdec_brext_f1;
+  assign override_pc_f1_o  = br_uncond_f1 ? pc_f1_t : (bpd_pred_f1 ? pc_f1_t : pc_f1_nt); 
+  // if the bpd prediction differs from btb director use bpd result as the
+  // final result, it has more accuracy on prediction. 
+  //assign override_vld_f1_o = (bpd_pred_f1^btb_brdir_f1) | br_uncond_f1 | br_cond_f1;
+  assign override_vld_f1_o = (bpd_pred_f1^btb_brdir_f1) & br_uncond_f1 | br_cond_f1;
 
 
   // figure out how many insts we're keeping
-  assign instvld_f1_tmp = brdec_brext_f1 ? brdec_instvld_f1 : instvld_f1;
+  // if brdec found branch instruction exist in current branch, override the
+  // value which we got from btb which is an history value 
+  assign instvld_f1 = brdec_brext_f1 ? brdec_instvld_f1 : btb_instvld_f1;
 
   wire [31:0] inst0_f1 = inst_align_i[ 31:  0];
   wire [31:0] inst1_f1 = inst_align_i[ 63: 32];
@@ -349,14 +352,14 @@ bob bob_inst(
   wire [31:0] inst6_f1 = inst_align_i[223:192];
   wire [31:0] inst7_f1 = inst_align_i[255:224];
 
-  wire inst0_vld_f1 = instvld_f1_tmp[0] & ~fetch_instinvld_f1 & ~fetch_rasacc_btbmis;
-  wire inst1_vld_f1 = instvld_f1_tmp[1] & ~fetch_instinvld_f1 & ~fetch_rasacc_btbmis;
-  wire inst2_vld_f1 = instvld_f1_tmp[2] & ~fetch_instinvld_f1 & ~fetch_rasacc_btbmis;
-  wire inst3_vld_f1 = instvld_f1_tmp[3] & ~fetch_instinvld_f1 & ~fetch_rasacc_btbmis;
-  wire inst4_vld_f1 = instvld_f1_tmp[4] & ~fetch_instinvld_f1 & ~fetch_rasacc_btbmis;
-  wire inst5_vld_f1 = instvld_f1_tmp[5] & ~fetch_instinvld_f1 & ~fetch_rasacc_btbmis;
-  wire inst6_vld_f1 = instvld_f1_tmp[6] & ~fetch_instinvld_f1 & ~fetch_rasacc_btbmis;
-  wire inst7_vld_f1 = instvld_f1_tmp[7] & ~fetch_instinvld_f1 & ~fetch_rasacc_btbmis;
+  wire inst0_vld_f1 = instvld_f1[0] & ~inst_invld_f1;
+  wire inst1_vld_f1 = instvld_f1[1] & ~inst_invld_f1;
+  wire inst2_vld_f1 = instvld_f1[2] & ~inst_invld_f1;
+  wire inst3_vld_f1 = instvld_f1[3] & ~inst_invld_f1;
+  wire inst4_vld_f1 = instvld_f1[4] & ~inst_invld_f1;
+  wire inst5_vld_f1 = instvld_f1[5] & ~inst_invld_f1;
+  wire inst6_vld_f1 = instvld_f1[6] & ~inst_invld_f1;
+  wire inst7_vld_f1 = instvld_f1[7] & ~inst_invld_f1;
 
 /* pipeline registers between fetch stage1 and decode stage0 (instruction buffer) */
 always @ (posedge clock or negedge reset_n)
