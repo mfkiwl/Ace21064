@@ -16,7 +16,6 @@ module ras(
   input  wire           clock,
   input  wire           reset_n,
   input  wire           flush_rt_i,
-  input  wire           icache_stall_i,
   input  wire           invalid_f1_i,
 
   input  wire           br_uncond_f1_i, // JAL;JALR which will be used as func call
@@ -29,7 +28,7 @@ module ras(
   input  wire [ 1:0]    btb_rasctl_f0_i,         // Push pop control signal.
 
   input  wire [ 3:0]    bob_rasptr_f1r_i,
-  input  wire           bob_vld_f1r_i,
+  input  wire           bob_entryvld_f1r_i,
 
   output wire [63:0]    ras_data_f0_o,           // The data on top of stack.
   output wire [ 3:0]    ras_ptr_f0_o             // kept in bob
@@ -44,34 +43,19 @@ module ras(
   reg  [ 3:0] ras_idx_nxt;
   wire [63:0] ras_data_tmp;
   wire        ras_we;
-  wire        ras_index_sel;
+  wire        ras_op;
   wire        ras_override;
   wire        ras_flush;
   wire [ 1:0] ras_ctl;
-  wire [ 3:0] ras_ptr_tmp;
+  reg  [ 3:0] ras_ptr_tmp;
+
+  assign ras_override = bpd_pred_f1_i & br_uncond_f1_i & ~invalid_f1_i ;
+  assign ras_ctl      = btb_rasctl_f0_i & {2{btb_hit_f0_i}};
+  assign ras_flush    = flush_rt_i & bob_entryvld_f1r_i;
+  assign ras_we       = ras_ctl[0] & ~ras_override; 
+  assign ras_op       = (ras_ctl & {2{~ras_override}});
 
   always @ (posedge clock or negedge reset_n)
-  begin
-    if (!reset_n)
-      ras_op_cur <= 2'h0;
-    else 
-      ras_op_cur <= ras_op_nxt;
-  end
-
-  always @ *
-  begin
-    ras_op_nxt = 2'hx;
-    case (ras_op_cur)
-    NOOP : begin
-             if()
-           end
-         
-    
-
-  end
-
-
-  always @(posedge clock or negedge reset_n)
   begin
     if (!reset_n)
       ras_idx_cur <= 4'h0;
@@ -79,41 +63,34 @@ module ras(
       ras_idx_cur <= ras_idx_nxt;
   end
 
-  assign ras_ctl = btb_rasctl_f0_i & {2{~icache_stall_i & btb_hit_f0_i}};
-
-  assign ras_override     = bpd_pred_f1_i | br_uncond_f1_i |
-                          ((ras_ctl != 2'b00) & ~btb_brdir_f1_i & ~invalid_f1_i);
-  assign ras_flush        = flush_rt_i & bob_vld_f1r_i;
-  assign ras_we           = ras_ctl[0] & ~invalid_f1_i & ~ras_override; 
-  assign ras_index_sel    = (ras_ctl & {2{~ras_override}});
-
   always @ *
   begin
-      if (ras_flush)
-        case (ras_index_sel)
-          NOOP   : ras_idx_nxt =  bob_rasptr_f1r_i;
-          PUSH   : ras_idx_nxt = (bob_rasptr_f1r_i+1)%16;
-          POP    : ras_idx_nxt = (bob_rasptr_f1r_i-1)%16;
-          PUSHPOP   : ras_idx_nxt =  bob_rasptr_f1r_i;
-          default:;
-        endcase
-      else
-        case (ras_index_sel)
-          NOOP   : ras_idx_nxt =  ras_idx_cur;           
-          PUSH   : ras_idx_nxt = (ras_idx_cur+1)%16;
-          POP    : ras_idx_nxt = (ras_idx_cur-1)%16;
-          PUSHPOP   : ras_idx_nxt =  ras_idx_cur;
-          default:;
-        endcase
-  end
-
-  always @ *
-  begin
-      case (ras_ctl)
-      2'b00 : ras_ptr_tmp = ras_idx_cur;
-      2'b01 : ras_ptr_tmp = ras_idx_cur + 1;
-      2'b10 : ras_ptr_tmp = ras_idx_cur - 1;
-      2'b11 : ras_ptr_tmp = ras_idx_cur;
+      case (ras_op)
+      NOOP    : begin
+                  if (ras_flush)
+                    ras_idx_nxt =  bob_rasptr_f1r_i;
+                  else
+                    ras_idx_nxt =  ras_idx_cur;           
+                end
+      PUSH    : begin
+                  if (ras_flush)
+                    ras_idx_nxt = (bob_rasptr_f1r_i+1)%16;
+                  else
+                    ras_idx_nxt = (ras_idx_cur+1)%16;
+                end
+      POP     : begin
+                  if (ras_flush)
+                    ras_idx_nxt = (bob_rasptr_f1r_i-1)%16;
+                  else
+                    ras_idx_nxt = (ras_idx_cur-1)%16;
+                end
+      POPPUSH : begin
+                  if (ras_flush)
+                    ras_idx_nxt =  bob_rasptr_f1r_i;
+                  else
+                    ras_idx_nxt =  ras_idx_cur;
+                end
+      default :;
       endcase
   end
 
@@ -126,6 +103,9 @@ module ras(
     .data_in     (brdec_rasdat_f1_i),
     .data_out    (ras_data_tmp)
   );
+
+  assign ras_ptr_tmp = ras_ctl[1] ? (ras_ctl[0] ? ras_idx_cur : ras_idx_cur-1)
+                                  : (ras_ctl[0] ? ras_idx_cur+1 : ras_idx_cur);
 
   assign ras_ptr_f0_o     = ras_flush ? bob_rasptr_f1r_i  : ras_ptr_tmp;
   assign ras_data_f0_o    = ras_we    ? brdec_rasdat_f1_i : ras_data_tmp;

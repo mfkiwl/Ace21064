@@ -123,8 +123,8 @@ ras    ras_inst(
   .reset_n                (reset_n),
   .flush_rt_i             (flush_rt_i),
   .invalid_f1_i           (inst_invld_f1),
-  .icache_stall_i         (icache_stall_i),
 
+  .br_uncond_f1_i         (br_uncond_f1),
   .bpd_pred_f1_i          (bpd_pred_f1),
 
   .brdec_brtyp_f1_i       (brdec_brtyp_f1 ),
