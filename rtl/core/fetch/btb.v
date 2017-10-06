@@ -79,13 +79,13 @@ module btb (
     .btb_brdir_cert_i    (btb_brdir_cert),
     .btb_brpc_cert_i     (btb_brpc_cert),
     .btb_brtar_cert_i    (btb_brtar_cert),
-    .btb_hit_f0_o      (btb_hit_way0_f0       ),
+    .btb_hit_f0_o        (btb_hit_way0_f0       ),
     .btb_brpos_f0_o      (br_pos_way0           ),
     .btb_brtyp_f0_o      (br_typ_way0           ),
     .btb_brtar_f0_o      (br_tar_way0           ),
     .btb_rasctl_f0_o     (ras_ctl_way0          ),
     .btb_brdir_f0_o      (br_dir_way0           ),
-    .btb_hit_f1_o      (btb_hit_way0_f1       )
+    .btb_hit_f1_o        (btb_hit_way0_f1       )
   );
 
   btb_way btb_way1(
