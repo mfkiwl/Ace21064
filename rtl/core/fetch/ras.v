@@ -21,17 +21,17 @@ module ras(
   input  wire           br_uncond_f1_i, // JAL;JALR which will be used as func call
 
   input  wire           bpd_pred_f1_i,
-  input  wire [63:0]    brdec_rasdat_f1_i,       // The data to be pushed into stack.
+  input  wire [63:0]    brdec_rasdat_f1_i,  // The data to be pushed into stack.
 
-  input  wire           btb_hit_f0_i,
+  input  wire           btb_hit_f0_i,       // Update RAS when btb miss on call/return 
   input  wire           btb_brdir_f1_i, 
-  input  wire [ 1:0]    btb_rasctl_f0_i,         // Push pop control signal.
+  input  wire [ 1:0]    btb_rasctl_f0_i,    // Push pop control signal.
 
-  input  wire [ 3:0]    bob_rasptr_f1r_i,
+  input  wire [ 3:0]    bob_rasptr_f1r_i,   // RAS recovery signals
   input  wire           bob_entryvld_f1r_i,
 
-  output wire [63:0]    ras_data_f0_o,           // The data on top of stack.
-  output wire [ 3:0]    ras_ptr_f0_o             // kept in bob
+  output wire [63:0]    ras_data_f0_o,      // The data on top of stack.
+  output wire [ 3:0]    ras_ptr_f0_o        // kept in bob
 );
 
   localparam NOOP    = 3'b00;       // No operation

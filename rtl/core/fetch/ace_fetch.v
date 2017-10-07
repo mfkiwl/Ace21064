@@ -127,15 +127,15 @@ ras    ras_inst(
   .br_uncond_f1_i         (br_uncond_f1),
   .bpd_pred_f1_i          (bpd_pred_f1),
 
-  .brdec_brtyp_f1_i       (brdec_brtyp_f1 ),
+//  .brdec_brtyp_f1_i       (brdec_brtyp_f1 ),
   .brdec_rasdat_f1_i      (brdec_rasdat_f1),
 
   .btb_hit_f0_i           (btb_hit_f0),
-  .btb_brdir_f1_i         (btb_brdir_f1      ), // attention
+  .btb_brdir_f1_i         (btb_brdir_f1), // attention
   .btb_rasctl_f0_i        (btb_rasctl_f0),
 
   .bob_rasptr_f1r_i       (bob_rasptr_f1r    ),
-  .bob_vld_f1r_i          (bob_valid_f1r),
+  .bob_entryvld_f1r_i     (bob_valid_f1r),
 
   .ras_data_f0_o          (ras_data_f0),
   .ras_ptr_f0_o           (ras_ptr_f0        )
@@ -251,7 +251,7 @@ bob bob_inst(
   .pc_f1_i            (pc_f1),
   .brcond_vld_rt_i    (brcond_vld_rt_r ),
   .brindir_vld_rt_i   (brindir_vld_rt_r),
-  .brdec_brtyp_i      (brdec_brtyp_f1),
+//  .brdec_brtyp_i      (brdec_brtyp_f1),
   .br_uncond_f1_i     (br_uncond_f1),
   .br_cond_f1_i       (br_cond_f1),
 
@@ -329,8 +329,11 @@ bob bob_inst(
   assign pipctl_fill_f1 = ~instbuf_full_i & ~bob_stall_f1;
   assign inst_invld_f1  = instbuf_full_i | flush_rt_r | icache_stall_f1 | bob_stall_f1;
 
+  assign br_indirret_f1    = (brdec_brtyp_f1 == `BR_INDIRRET) & brdec_brext_f1;
+  assign br_indir_f1       = (brdec_brtyp_f1 == `BR_INDIR) & brdec_brext_f1;
   assign br_uncond_f1      = (brdec_brtyp_f1 == `BR_UNCOND) & brdec_brext_f1;
   assign br_cond_f1        = (brdec_brtyp_f1 == `BR_COND)   & brdec_brext_f1;
+
   assign override_pc_f1_o  = br_uncond_f1 ? pc_f1_t : (bpd_pred_f1 ? pc_f1_t : pc_f1_nt); 
   // if the bpd prediction differs from btb director use bpd result as the
   // final result, it has more accuracy on prediction. 

@@ -15,12 +15,11 @@
 `define BR_INDIR          2'b10  // indirectory jump   eg. JALR
 `define BR_INDIRRET       2'b11  // indirectory jump, function return eg. URET
 
-
+// RISC-V encoding for partial decoding
 `define RV32I_BRANCH      7'b1100011
 `define RV32I_JAL         7'b1101111
 `define RV32I_JALR        7'b1100111
 `define RV32_SYSTEM       7'b1110011
-
 
 `define RV32I_FUNCT3_BEQ           0
 `define RV32I_FUNCT3_BNE           1
@@ -28,7 +27,6 @@
 `define RV32I_FUNCT3_BGE           5
 `define RV32I_FUNCT3_BLTU          6
 `define RV32I_FUNCT3_BGEU          7
-
 
 // SYSTEM FUNCT3 encodings
 `define RV32I_FUNCT3_PRIV          0
