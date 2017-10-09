@@ -16,7 +16,6 @@ module inst_buf(
   input	 wire         clock,
   input	 wire         reset_n,
   input	 wire         flush_i,
-  input	 wire         rm_inst_i,
   input  wire [31:0]  inst0_i,
   input  wire [31:0]  inst1_i,
   input  wire [31:0]  inst2_i,

@@ -14,19 +14,19 @@
 module ace_fetch(
   input wire                     clock,
   input wire                     reset_n,
-  input wire [ 63:0]             pc_f0,      
-  input wire [ 63:0]             pc_f1,
+  input wire [ 63:0]             pcgen_pc_f0,      
+  input wire [ 63:0]             pcgen_pc_f1,
   // from icache for fatch1
-  input wire [255:0]             inst_align_i,
+  input wire [255:0]             icache_instalign_i,
   input wire                     icache_stall_i,
   // from instruction buffer (decode) 
-  input wire                     instbuf_full_i,
+  input wire                     decode_instbuf_full_i,
   // from retire stage
-  input wire                     flush_rt_i,
-  input wire [ 63:0]             flush_pc_rt_i,
-  input wire                     brcond_vld_rt_i,   // valid bit for cond feedback
-  input wire                     brindir_vld_rt_i,  // indirect retired
-  input wire                     brdir_rt_i,        // executed direction for this branch
+  input wire                     retire_flush_i,
+  input wire [ 63:0]             retire_flush_pc_i,
+  input wire                     retire_brcond_vld_i,   // valid bit for cond feedback
+  input wire                     retire_brindir_vld_i,  // indirect retired
+  input wire                     retire_brdir_i,        // executed direction for this branch
 
   output wire [63:0]             override_pc_f1_o,  // override from f1 stage for pc_gen
   output wire                    override_vld_f1_o, // override from f1 stage for pc_gen
@@ -94,8 +94,8 @@ module ace_fetch(
 btb    btb_inst(
   .clock                  (clock),
   .reset_n                (reset_n),
-  .pc_f0_i                (pc_f0),
-  .pc_f1_i                (pc_f1),
+  .pc_f0_i                (pcgen_pc_f0),
+  .pc_f1_i                (pcgen_pc_f1),
 
   .brdec_brext_f1_i       (brdec_brext_f1),
   .brdec_brpos_f1_i       (brdec_brpos_f1),
@@ -121,7 +121,7 @@ btb    btb_inst(
 ras    ras_inst(
   .clock                  (clock),
   .reset_n                (reset_n),
-  .flush_rt_i             (flush_rt_i),
+  .flush_rt_i             (retire_flush_i),
   .invalid_f1_i           (inst_invld_f1),
 
   .br_uncond_f1_i         (br_uncond_f1),
@@ -145,8 +145,8 @@ ras    ras_inst(
 bpd bpd_inst(
   .clock                 (clock                 ),
   .reset_n               (reset_n               ),
-  .pc_f0_i               (pc_f0                 ),
-  .pc_f1_i               (pc_f1                 ),
+  .pc_f0_i               (pcgen_pc_f0                 ),
+  .pc_f1_i               (pcgen_pc_f1                 ),
   .pipctl_flush_rt_i     (flush_rt_r            ),
   .pipctl_fill_f1_i      (pipctl_fill_f1        ),
 
@@ -178,10 +178,10 @@ assign ras_pop_f0  = (btb_brtyp_f0==`BR_INDIRRET) & btb_hit_f0;
 
 // btb hit, predict taken, redirect to the predicted taken address
 // btb hit, predict not-taken, redirect to the address after the branch
-assign btb_data_f0 = btb_brdir_f0 ? btb_brtar_f0 : (pc_f0 + (btb_brpos_f0 << 2) + 4);
+assign btb_data_f0 = btb_brdir_f0 ? btb_brtar_f0 : (pcgen_pc_f0 + (btb_brpos_f0 << 2) + 4);
 
-// miss in btb, go to the fall through address(pc_f0+32).
-assign nxt_pc_f0_tmp   = btb_hit_f0 ? btb_data_f0 : pc_f0+32;
+// miss in btb, go to the fall through address(pcgen_pc_f0+32).
+assign nxt_pc_f0_tmp   = btb_hit_f0 ? btb_data_f0 : pcgen_pc_f0+32;
 
 // ras_pop_f0 enabled, current instruction is an xRET, the next pc comes from RAS
 assign nxt_pc_f0_o = ras_pop_f0 ? ras_data_f0 : nxt_pc_f0_tmp;
@@ -224,7 +224,7 @@ end
 
 // brdec instance
 brdec brdec_inst(
-  .pc_f1_i            (pc_f1               ),
+  .pc_f1_i            (pcgen_pc_f1               ),
   .inst0_i            (inst0_f1            ),
   .inst1_i            (inst1_f1            ),
   .inst2_i            (inst2_f1            ),
@@ -247,8 +247,8 @@ brdec brdec_inst(
 bob bob_inst(
   .clock              (clock),
   .reset_n            (reset_n),
-  .flush              (flush_rt_i),
-  .pc_f1_i            (pc_f1),
+  .flush              (retire_flush_i),
+  .pc_f1_i            (pcgen_pc_f1),
   .brcond_vld_rt_i    (brcond_vld_rt_r ),
   .brindir_vld_rt_i   (brindir_vld_rt_r),
 //  .brdec_brtyp_i      (brdec_brtyp_f1),
@@ -301,11 +301,11 @@ bob bob_inst(
       bob_bht_f1r         <= bob_bht_f1;
       bob_bhr_f1r         <= bob_bhr_f1;
       bob_rasptr_f1r      <= bob_rasptr_f1;
-      brcond_vld_rt_r     <= brcond_vld_rt_i;
-      brindir_vld_rt_r    <= brindir_vld_rt_i;
-      brdir_rt_r          <= brdir_rt_i;
-      flush_rt_r          <= flush_rt_i;
-      flush_pc_rt_r       <= flush_pc_rt_i;
+      brcond_vld_rt_r     <= retire_brcond_vld_i;
+      brindir_vld_rt_r    <= retire_brindir_vld_i;
+      brdir_rt_r          <= retire_brdir_i;
+      flush_rt_r          <= retire_flush_i;
+      flush_pc_rt_r       <= retire_flush_pc_i;
     end
   end
 
@@ -315,19 +315,19 @@ bob bob_inst(
   always @ *
   begin
     case (brdec_brpos_f1)
-    3'b000: pc_f1_nt = pc_f1 + 64'h00;
-    3'b001: pc_f1_nt = pc_f1 + 64'h04;
-    3'b010: pc_f1_nt = pc_f1 + 64'h08;
-    3'b011: pc_f1_nt = pc_f1 + 64'h0c;
-    3'b100: pc_f1_nt = pc_f1 + 64'h10;
-    3'b101: pc_f1_nt = pc_f1 + 64'h14;
-    3'b110: pc_f1_nt = pc_f1 + 64'h18;
-    3'b111: pc_f1_nt = pc_f1 + 64'h1c;
+    3'b000: pc_f1_nt = pcgen_pc_f1 + 64'h00;
+    3'b001: pc_f1_nt = pcgen_pc_f1 + 64'h04;
+    3'b010: pc_f1_nt = pcgen_pc_f1 + 64'h08;
+    3'b011: pc_f1_nt = pcgen_pc_f1 + 64'h0c;
+    3'b100: pc_f1_nt = pcgen_pc_f1 + 64'h10;
+    3'b101: pc_f1_nt = pcgen_pc_f1 + 64'h14;
+    3'b110: pc_f1_nt = pcgen_pc_f1 + 64'h18;
+    3'b111: pc_f1_nt = pcgen_pc_f1 + 64'h1c;
     endcase
   end
   // fetch stage pipeline enable control
-  assign pipctl_fill_f1 = ~instbuf_full_i & ~bob_stall_f1;
-  assign inst_invld_f1  = instbuf_full_i | flush_rt_r | icache_stall_f1 | bob_stall_f1;
+  assign pipctl_fill_f1 = ~decode_instbuf_full_i & ~bob_stall_f1;
+  assign inst_invld_f1  = decode_instbuf_full_i | flush_rt_r | icache_stall_f1 | bob_stall_f1;
 
   assign br_indirret_f1    = (brdec_brtyp_f1 == `BR_INDIRRET) & brdec_brext_f1;
   assign br_indir_f1       = (brdec_brtyp_f1 == `BR_INDIR) & brdec_brext_f1;
@@ -346,14 +346,14 @@ bob bob_inst(
   // value which we got from btb which is an history value 
   assign instvld_f1 = brdec_brext_f1 ? brdec_instvld_f1 : btb_instvld_f1;
 
-  wire [31:0] inst0_f1 = inst_align_i[ 31:  0];
-  wire [31:0] inst1_f1 = inst_align_i[ 63: 32];
-  wire [31:0] inst2_f1 = inst_align_i[ 95: 64];
-  wire [31:0] inst3_f1 = inst_align_i[127: 96];
-  wire [31:0] inst4_f1 = inst_align_i[159:128];
-  wire [31:0] inst5_f1 = inst_align_i[191:160];
-  wire [31:0] inst6_f1 = inst_align_i[223:192];
-  wire [31:0] inst7_f1 = inst_align_i[255:224];
+  wire [31:0] inst0_f1 = icache_instalign_i[ 31:  0];
+  wire [31:0] inst1_f1 = icache_instalign_i[ 63: 32];
+  wire [31:0] inst2_f1 = icache_instalign_i[ 95: 64];
+  wire [31:0] inst3_f1 = icache_instalign_i[127: 96];
+  wire [31:0] inst4_f1 = icache_instalign_i[159:128];
+  wire [31:0] inst5_f1 = icache_instalign_i[191:160];
+  wire [31:0] inst6_f1 = icache_instalign_i[223:192];
+  wire [31:0] inst7_f1 = icache_instalign_i[255:224];
 
   wire inst0_vld_f1 = instvld_f1[0] & ~inst_invld_f1;
   wire inst1_vld_f1 = instvld_f1[1] & ~inst_invld_f1;
