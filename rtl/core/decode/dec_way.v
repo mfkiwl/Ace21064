@@ -24,12 +24,13 @@ module dec_way(
     
     output reg              use_rs1_o,
     output reg              use_rs2_o,
-    output reg              need_rd_o,
+    output reg              use_rd_o,
+    output reg              write_rd_o,
+    output reg              memory_inst_o,
     // branch_inst
     // simple_alu
     // complex_alu
     // multiply
-    // memroy_inst
     // cond_br
     // uncond_br
     // indirect_br
@@ -59,21 +60,26 @@ module dec_way(
        imm_type_o            = `IMM_I;
        src_a_sel_o           = `SRC_A_RS1;
        src_b_sel_o           = `SRC_B_IMM;
-       need_rd_o             = 1'b0;
-       use_rs1_o            = 1'b1;
-       use_rs2_o            = 1'b0;
+       use_rs1_o             = 1'b1;
+       use_rs2_o             = 1'b0;
+       use_rd_o              = 1'b0;
+       write_rd_o            = 1'b0;
        alu_op_o              = `ALU_OP_ADD;
-       illegal_inst_o = 1'b0;
+       memory_inst_o         = 1'b0;
+       illegal_inst_o        = 1'b0;
       
       case (opcode)
       `RV32_LOAD :    begin
-                          rs_id_o = `RESERVATION_STATION1;
-                          need_rd_o = 1'b1;
+                          rs_id_o    = `RESERVATION_STATION1;
+                          use_rd_o   = 1'b1;
+                          write_rd_o = 1'b1;
+                          memory_inst_o         = 1'b1;
                       end
       `RV32_STORE :   begin
-                          rs_id_o = `RESERVATION_STATION1;
-                          use_rs2_o = 1'b1;
+                          rs_id_o    = `RESERVATION_STATION1;
+                          use_rs2_o  = 1'b1;
                           imm_type_o = `IMM_S;
+                          memory_inst_o         = 1'b1;
                       end
       // conditional branches
       `RV32I_BRANCH : begin
@@ -97,13 +103,15 @@ module dec_way(
                          use_rs1_o = 1'b0;
                          src_a_sel_o = `SRC_A_PC;
                          src_b_sel_o = `SRC_B_FOUR;
-                         need_rd_o = 1'b1;
+                         use_rd_o = 1'b1;
+                         write_rd_o = 1'b1;
                      end
       `RV32I_JALR :  begin
                          rs_id_o = `RESERVATION_STATION1;
                          src_a_sel_o = `SRC_A_PC;
                          src_b_sel_o = `SRC_B_FOUR;
-                         need_rd_o = 1'b1;
+                         use_rd_o = 1'b1;
+                         write_rd_o = 1'b1;
                          illegal_inst_o = (funct3 != 0);
                      end
 /*
@@ -127,19 +135,21 @@ module dec_way(
       end
 */
       `RV32_ALU_IMM: begin
-                         need_rd_o = 1'b1;
+                         use_rd_o = 1'b1;
+                         write_rd_o = 1'b1;
                          alu_op_o = alu_op_arith;
                      end
       `RV32_ALU :    begin
                          use_rs2_o = 1'b1;
                          src_b_sel_o = `SRC_B_RS2;
                          alu_op_o = alu_op_arith;
-                         need_rd_o = 1'b1;
+                         use_rd_o = 1'b1;
+                         write_rd_o = 1'b1;
                      end
 /*
       `RV32I_SYSTEM : begin
          wb_src_sel_DX = `WB_SRC_CSR;
-         need_rd_o = (funct3 != `RV32I_FUNCT3_PRIV);
+         use_rd_o = (funct3 != `RV32I_FUNCT3_PRIV);
          case (funct3)
            `RV32I_FUNCT3_PRIV : begin
               if ((rs1_o == 0) && (reg_to_wr_DX == 0)) begin
@@ -170,13 +180,15 @@ module dec_way(
                       use_rs1_o = 1'b0;
                       src_a_sel_o = `SRC_A_PC;
                       imm_type_o = `IMM_U;
-                      need_rd_o = 1'b1;
+                      use_rd_o = 1'b1;
+                      write_rd_o = 1'b1;
                    end
      `RV32I_LUI :  begin
                       use_rs1_o = 1'b0;
                       src_a_sel_o = `SRC_A_ZERO;
                       imm_type_o = `IMM_U;
-                      need_rd_o = 1'b1;
+                      use_rd_o = 1'b1;
+                      write_rd_o = 1'b1;
                    end
      default :     illegal_inst_o = 1'b1;
      endcase

@@ -42,10 +42,12 @@ module ace_decode (
     output wire [1:0]   inst0_src_b_sel_o,
     output wire         inst0_use_rs1_o,
     output wire         inst0_use_rs2_o,
-    output wire         inst0_need_rd_o,
+    output wire         inst0_use_rd_o,
+    output wire         inst0_write_rd_o,
     output wire [3:0]   inst0_alu_op_o,
     output wire         inst0_rs_id_o,    // reservation station id
     output wire         inst0_illegal_o,
+    output wire         inst0_memacc_o,
 
     output wire [4:0]   inst1_rs1_o,
     output wire [4:0]   inst1_rs2_o,
@@ -55,10 +57,12 @@ module ace_decode (
     output wire [1:0]   inst1_src_b_sel_o,
     output wire         inst1_use_rs1_o,
     output wire         inst1_use_rs2_o,
-    output wire         inst1_need_rd_o,
+    output wire         inst1_use_rd_o,
+    output wire         inst1_write_rd_o,
     output wire [3:0]   inst1_alu_op_o,
     output wire         inst1_rs_id_o,    // reservation station id
     output wire         inst1_illegal_o,
+    output wire         inst1_memacc_o,
 
     output wire [4:0]   inst2_rs1_o,
     output wire [4:0]   inst2_rs2_o,
@@ -68,10 +72,12 @@ module ace_decode (
     output wire [1:0]   inst2_src_b_sel_o,
     output wire         inst2_use_rs1_o,
     output wire         inst2_use_rs2_o,
-    output wire         inst2_need_rd_o,
+    output wire         inst2_use_rd_o,
+    output wire         inst2_write_rd_o,
     output wire [3:0]   inst2_alu_op_o,
     output wire         inst2_rs_id_o,    // reservation station id
     output wire         inst2_illegal_o,
+    output wire         inst2_memacc_o,
 
     output wire [4:0]   inst3_rs1_o,
     output wire [4:0]   inst3_rs2_o,
@@ -81,10 +87,12 @@ module ace_decode (
     output wire [1:0]   inst3_src_b_sel_o,
     output wire         inst3_use_rs1_o,
     output wire         inst3_use_rs2_o,
-    output wire         inst3_need_rd_o,
+    output wire         inst3_use_rd_o,
+    output wire         inst3_write_rd_o,
     output wire [3:0]   inst3_alu_op_o,
     output wire         inst3_rs_id_o,    // reservation station id
     output wire         inst3_illegal_o,
+    output wire         inst3_memacc_o,
 
     output wire         instbuf_full_o,
     output wire         instbuf_empty_o
@@ -135,10 +143,12 @@ dec_way decoder_way0(
     .src_b_sel_o          (inst0_src_b_sel_o),
     .use_rs1_o            (inst0_use_rs1_o  ),
     .use_rs2_o            (inst0_use_rs2_o  ),
-    .need_rd_o            (inst0_need_rd_o  ),
+    .use_rd_o             (inst0_use_rd_o  ),
+    .write_rd_o           (inst0_write_rd_o  ),
     .alu_op_o             (inst0_alu_op_o   ),
     .rs_id_o              (inst0_rs_id_o    ),
     .illegal_inst_o       (inst0_illegal_o  )
+    .memory_inst_o        (inst0_memacc_o  )
 );
 
 dec_way decoder_way1(
@@ -151,10 +161,12 @@ dec_way decoder_way1(
     .src_b_sel_o          (inst1_src_b_sel_o),
     .use_rs1_o            (inst1_use_rs1_o  ),
     .use_rs2_o            (inst1_use_rs2_o  ),
-    .need_rd_o            (inst1_need_rd_o  ),
+    .use_rd_o             (inst1_use_rd_o  ),
+    .write_rd_o           (inst1_write_rd_o  ),
     .alu_op_o             (inst1_alu_op_o   ),
     .rs_id_o              (inst1_rs_id_o    ),
     .illegal_inst_o       (inst1_illegal_o  )
+    .memory_inst_o        (inst1_memacc_o  )
 );
 
 dec_way decoder_way2(
@@ -167,10 +179,12 @@ dec_way decoder_way2(
     .src_b_sel_o          (inst2_src_b_sel_o),
     .use_rs1_o            (inst2_use_rs1_o  ),
     .use_rs2_o            (inst2_use_rs2_o  ),
-    .need_rd_o            (inst2_need_rd_o  ),
+    .use_rd_o             (inst2_use_rd_o  ),
+    .write_rd_o           (inst2_write_rd_o  ),
     .alu_op_o             (inst2_alu_op_o   ),
     .rs_id_o              (inst2_rs_id_o    ),
     .illegal_inst_o       (inst2_illegal_o  )
+    .memory_inst_o        (inst2_memacc_o  )
 );
 
 dec_way decoder_way3(
@@ -183,10 +197,12 @@ dec_way decoder_way3(
     .src_b_sel_o          (inst3_src_b_sel_o),
     .use_rs1_o            (inst3_use_rs1_o  ),
     .use_rs2_o            (inst3_use_rs2_o  ),
-    .need_rd_o            (inst3_need_rd_o  ),
+    .use_rd_o             (inst3_use_rd_o  ),
+    .write_rd_o           (inst3_write_rd_o  ),
     .alu_op_o             (inst3_alu_op_o   ),
     .rs_id_o              (inst3_rs_id_o    ),
     .illegal_inst_o       (inst3_illegal_o  )
+    .memory_inst_o        (inst3_memacc_o  )
 );
 
 endmodule
