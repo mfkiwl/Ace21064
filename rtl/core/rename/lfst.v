@@ -46,8 +46,7 @@ reg valid0_out, valid1_out, valid2_out, valid3_out;
 
 reg [127 : 0] lfs_v_f;
 
-  RAM_8P #(7,128,7,0) lfst_ram(
-          // read ports
+  ram_8p #(7,128,7,0) lfst_ram(
           .data1_in(),
           .index1_in(ssid0_in),
           .we1_in(1'b0),
@@ -72,7 +71,8 @@ reg [127 : 0] lfs_v_f;
           .data8_in(update3_in[7:1]),
           .index8_in(update3_in[14:8]),
           .we8_in(update3_in[0]),
-          .clock(clock), .reset_n(reset_n),
+          .clock(clock),
+          .reset_n(reset_n),
           .data1_out(lfs0_out),
           .data2_out(lfs1_out),
           .data3_out(lfs2_out),
@@ -91,7 +91,7 @@ begin
   valid3_out = lfs_v_f[ssid3_in] && valid3_in;
 end
 
-always @(posedge clock or posedge reset_n)
+always @(posedge clock or negedge reset_n)
 begin
   if (!reset_n)
     lfs_v_f = 128'b0;
@@ -125,9 +125,9 @@ begin
   valid3_out = lfs_v_f[ssid3_in] && valid3_in;
 end
 
-always @(posedge clock or posedge reset_n)
+always @(posedge clock or negedge reset_n)
 begin
-  if (reset_n)
+  if (!reset_n)
     for (i=0; i<128; i=i+1)
       begin
       lfs_f[i] <= 0;

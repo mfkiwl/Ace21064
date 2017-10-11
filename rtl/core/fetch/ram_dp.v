@@ -21,16 +21,6 @@ module ram_dp#(
 
   reg [DATAWIDTH-1:0] ram_f [INDEXSIZE-1:0];
 
-  always @ *
-  begin
-    data1_out = ram_f[index1_in];
-  end
-
-  always @ *
-  begin
-    data2_out = ram_f[index2_in];
-  end
-
   always @(posedge clock or negedge reset_n)
   begin
     if (!reset_n)
@@ -43,6 +33,12 @@ module ram_dp#(
       if (we2_in)
         ram_f[index2_in] <= data2_in;
       end
+  end
+
+  always @ *
+  begin
+    data1_out = ram_f[index1_in];
+    data2_out = ram_f[index2_in];
   end
 
 endmodule
