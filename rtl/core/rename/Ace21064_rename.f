@@ -1,3 +1,4 @@
+$ACE_PATH/rtl/core/rename/ram_8p.v
 $ACE_PATH/rtl/core/rename/dep_chk.v
 $ACE_PATH/rtl/core/rename/dep_chk_ssit.v
 $ACE_PATH/rtl/core/rename/ssit.v
