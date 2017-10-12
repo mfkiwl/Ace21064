@@ -175,9 +175,34 @@ module spec_rfl(
         nxt_head_ptr = cur_head_ptr;
   end
 
-  always @ ( * )
+  always @  *
   begin
     nxt_tail_ptr = cur_tail_ptr;
+    wport0_idx  = 6'b0;
+    wport0_data = 7'b0;
+    wport0_we   = 1'b0;
+    wport1_idx  = 6'b0;
+    wport1_data = 7'b0;
+    wport1_we   = 1'b0;
+    wport2_idx  = 6'b0;
+    wport2_data = 7'b0;
+    wport2_we   = 1'b0;
+    wport3_idx  = 6'b0;
+    wport3_data = 7'b0;
+    wport3_we   = 1'b0;
+    wport4_idx  = 6'b0;
+    wport4_data = 7'b0;
+    wport4_we   = 1'b0;
+    wport5_idx  = 6'b0;
+    wport5_data = 7'b0;
+    wport5_we   = 1'b0;
+    wport6_idx  = 6'b0;
+    wport6_data = 7'b0;
+    wport6_we   = 1'b0;
+    wport7_idx  = 6'b0;
+    wport7_data = 7'b0;
+    wport7_we   = 1'b0;
+
     if (retire0_rls_rd_vld_i)
       begin
       wport0_idx  = nxt_tail_ptr;
@@ -240,25 +265,25 @@ module spec_rfl(
   begin
     if (!reset_n)
     begin
-      cur_head_ptr      = 6'b0;
-      cur_tail_ptr      = 6'b0;
-      free_pr_cnt = 48;
+      cur_head_ptr <= 6'b0;
+      cur_tail_ptr <= 6'b0;
+      free_pr_cnt  <= 48;
     end
     else if (arch_fl_rec_i)
     begin
       cur_head_ptr <= nxt_tail_ptr;
       cur_tail_ptr <= nxt_tail_ptr;
-      free_pr_cnt <= (80-32);     // phys reg num - arch reg num
+      free_pr_cnt  <= (80-32);     // phys reg num - arch reg num
     end
     else
     begin
       cur_head_ptr <= nxt_head_ptr;
       cur_tail_ptr <= nxt_tail_ptr;
-      free_pr_cnt <= free_pr_cnt + freereg_ret_total 
-                                 - inst0_freereg_vld_o 
-                                 - inst1_freereg_vld_o 
-                                 - inst2_freereg_vld_o 
-                                 - inst3_freereg_vld_o;
+      free_pr_cnt  <= free_pr_cnt + freereg_ret_total;
+//                                 - inst0_freereg_vld_o 
+//                                 - inst1_freereg_vld_o 
+//                                 - inst2_freereg_vld_o 
+//                                 - inst3_freereg_vld_o;
     end
   end
 

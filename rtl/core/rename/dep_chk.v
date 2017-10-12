@@ -88,9 +88,9 @@ module dep_chk(
   assign dep_inst3rd_inst1rd = (inst3_ard_i == inst1_ard_i); //WAW between inst1 and inst3
   assign dep_inst3rd_inst2rd = (inst3_ard_i == inst2_ard_i); //WAW between inst2 and inst3
   
-  assign inst0_rs1_sel_o = 'b00; //never overwritten
-  assign inst0_rs2_sel_o = 'b00; //never overwritten
-  assign inst0_rd_sel_o  = 'b00; //never overwritten
+  assign inst0_rs1_sel_o = 2'b00; //never overwritten
+  assign inst0_rs2_sel_o = 2'b00; //never overwritten
+  assign inst0_rd_sel_o  = 2'b00; //never overwritten
 
   assign inst1_rs1_sel_o = (dep_inst1rs1_inst0rd && inst0_ard_vld_i) ? 2'b00 : 2'b01;
   assign inst1_rs2_sel_o = (dep_inst1rs2_inst0rd && inst0_ard_vld_i) ? 2'b00 : 2'b01;

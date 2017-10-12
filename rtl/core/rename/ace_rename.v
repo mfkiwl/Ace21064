@@ -12,62 +12,76 @@
 //
 /////////////////////////////////////////////////////////////////////////////////////////
 module ace_rename(
-    input        clock,
-    input        reset_n,
-    input [63:0] pc_r0_i,
-    input [ 4:0] decode_inst0rs1_i,
-    input [ 4:0] decode_inst1rs1_i,
-    input [ 4:0] decode_inst2rs1_i,
-    input [ 4:0] decode_inst3rs1_i,
-    input [ 4:0] decode_inst0rs2_i,
-    input [ 4:0] decode_inst1rs2_i,
-    input [ 4:0] decode_inst2rs2_i,
-    input [ 4:0] decode_inst3rs2_i,
-    input [ 4:0] decode_inst0rd_i,
-    input [ 4:0] decode_inst1rd_i,
-    input [ 4:0] decode_inst2rd_i,
-    input [ 4:0] decode_inst3rd_i,
-    input        decode_inst0writeRd_i,
-    input        decode_inst1writeRd_i,
-    input        decode_inst2writeRd_i,
-    input        decode_inst3writeRd_i,
-    input        decode_inst0useRd_i,
-    input        decode_inst1useRd_i,
-    input        decode_inst2useRd_i,
-    input        decode_inst3useRd_i,
-    input        decode_inst0_memacc_i,
-    input        decode_inst1_memacc_i,
-    input        decode_inst2_memacc_i,
-    input        decode_inst3_memacc_i,
+    input wire        clock,
+    input wire        reset_n,
+    input wire [63:0] pc_r0_i,
+    input wire [ 4:0] decode_inst0rs1_i,
+    input wire [ 4:0] decode_inst1rs1_i,
+    input wire [ 4:0] decode_inst2rs1_i,
+    input wire [ 4:0] decode_inst3rs1_i,
+    input wire [ 4:0] decode_inst0rs2_i,
+    input wire [ 4:0] decode_inst1rs2_i,
+    input wire [ 4:0] decode_inst2rs2_i,
+    input wire [ 4:0] decode_inst3rs2_i,
+    input wire [ 4:0] decode_inst0rd_i,
+    input wire [ 4:0] decode_inst1rd_i,
+    input wire [ 4:0] decode_inst2rd_i,
+    input wire [ 4:0] decode_inst3rd_i,
+    input wire        decode_inst0writeRd_i,
+    input wire        decode_inst1writeRd_i,
+    input wire        decode_inst2writeRd_i,
+    input wire        decode_inst3writeRd_i,
+    input wire        decode_inst0useRd_i,
+    input wire        decode_inst1useRd_i,
+    input wire        decode_inst2useRd_i,
+    input wire        decode_inst3useRd_i,
+    input wire        decode_inst0memacc_i,
+    input wire        decode_inst1memacc_i,
+    input wire        decode_inst2memacc_i,
+    input wire        decode_inst3memacc_i,
 
-    input [ 7:0] lfst_inv0_i,
-    input [ 7:0] lfst_inv1_i,
-    input        retire_flush_i,
-    input        retire_flush_r_i,
-    input        pipe_stall_i,
+    input wire [ 7:0] lfst_inv0_i,
+    input wire [ 7:0] lfst_inv1_i,
+    input wire        retire_flush_i,
+    input wire        retire_flush_r_i,
+    input wire        pipe_stall_i,
 
-    input [32*7-1:0]      retire_archrat_data_i,
-    input [(80-32)*7-1:0] retire_archrfl_data_i,
-    input [ 6:0] retire_freereg0_i,
-    input [ 6:0] retire_freereg1_i,
-    input [ 6:0] retire_freereg2_i,
-    input [ 6:0] retire_freereg3_i,
-    input [ 6:0] retire_freereg4_i,
-    input [ 6:0] retire_freereg5_i,
-    input [ 6:0] retire_freereg6_i,
-    input [ 6:0] retire_freereg7_i,
-    input        retire_freereg0_vld_i,
-    input        retire_freereg1_vld_i,
-    input        retire_freereg2_vld_i,
-    input        retire_freereg3_vld_i,
-    input        retire_freereg4_vld_i,
-    input        retire_freereg5_vld_i,
-    input        retire_freereg6_vld_i,
-    input        retire_freereg7_vld_i,
-    input [11:0] l1dcache_ssitidx1_i,
-    input [11:0] l1dcache_ssitidx2_i,
-    input        l1dcache_ssitwe_i,
-    output       rename_specrfl_stall_o
+    input wire [223:0] retire_archrat_data_i, //32*7
+    input wire [335:0] retire_archrfl_data_i, //(80-32)*7
+    input wire [ 6:0] retire_freereg0_i,
+    input wire [ 6:0] retire_freereg1_i,
+    input wire [ 6:0] retire_freereg2_i,
+    input wire [ 6:0] retire_freereg3_i,
+    input wire [ 6:0] retire_freereg4_i,
+    input wire [ 6:0] retire_freereg5_i,
+    input wire [ 6:0] retire_freereg6_i,
+    input wire [ 6:0] retire_freereg7_i,
+    input wire        retire_freereg0_vld_i,
+    input wire        retire_freereg1_vld_i,
+    input wire        retire_freereg2_vld_i,
+    input wire        retire_freereg3_vld_i,
+    input wire        retire_freereg4_vld_i,
+    input wire        retire_freereg5_vld_i,
+    input wire        retire_freereg6_vld_i,
+    input wire        retire_freereg7_vld_i,
+    input wire [11:0] l1dcache_ssitidx1_i,
+    input wire [11:0] l1dcache_ssitidx2_i,
+    input wire        l1dcache_ssitwe_i,
+
+    output wire        rename_specrfl_stall_o,
+    output wire  [6:0] inst0_rs1phys_r1_o,
+    output wire  [6:0] inst1_rs1phys_r1_o,
+    output wire  [6:0] inst2_rs1phys_r1_o,
+    output wire  [6:0] inst3_rs1phys_r1_o,
+    output wire  [6:0] inst0_rs2phys_r1_o,
+    output wire  [6:0] inst1_rs2phys_r1_o,
+    output wire  [6:0] inst2_rs2phys_r1_o,
+    output wire  [6:0] inst3_rs2phys_r1_o,
+    output wire  [6:0] inst0_oldrdphys_r1_o,
+    output wire  [6:0] inst1_oldrdphys_r1_o,
+    output wire  [6:0] inst2_oldrdphys_r1_o,
+    output wire  [6:0] inst3_oldrdphys_r1_o
+
 );
 
     wire [6:0] specrfl_freereg0;
@@ -427,10 +441,10 @@ begin
         decode_inst1writeRd_r1 <= decode_inst1writeRd_i;
         decode_inst2writeRd_r1 <= decode_inst2writeRd_i;
         decode_inst3writeRd_r1 <= decode_inst3writeRd_i;
-        decode_inst0memAcc_r1  <= decode_inst0_memacc_i;
-        decode_inst1memAcc_r1  <= decode_inst1_memacc_i;
-        decode_inst2memAcc_r1  <= decode_inst2_memacc_i;
-        decode_inst3memAcc_r1  <= decode_inst3_memacc_i;
+        decode_inst0memAcc_r1  <= decode_inst0memacc_i;
+        decode_inst1memAcc_r1  <= decode_inst1memacc_i;
+        decode_inst2memAcc_r1  <= decode_inst2memacc_i;
+        decode_inst3memAcc_r1  <= decode_inst3memacc_i;
     end
 end
 ///
@@ -531,10 +545,10 @@ assign lfs3_v = depchkssit_inst3ssidsel_r1[1] ? (depchkssit_inst3ssidsel_r1[0] ?
 
 // if a load is predicted to alias, place the aliasing store's destination
 // register into the srca field to order them
-assign inst0_rs1phys_r1_o = (decode_inst0memAcc_r1 && decode_inst0writeRd_r1 && lfs0_v && ssit_inst0ssidvld_r1 ) ?lfs0_sel : map_inst0_rs1phys;
-assign inst1_rs1phys_r1_o = (decode_inst1memAcc_r1 && decode_inst1writeRd_r1 && lfs1_v && ssit_inst1ssidvld_r1 ) ?lfs1_sel : map_inst1_rs1phys;
-assign inst2_rs1phys_r1_o = (decode_inst2memAcc_r1 && decode_inst2writeRd_r1 && lfs2_v && ssit_inst2ssidvld_r1 ) ?lfs2_sel : map_inst2_rs1phys;
-assign inst3_rs1phys_r1_o = (decode_inst3memAcc_r1 && decode_inst3writeRd_r1 && lfs3_v && ssit_inst3ssidvld_r1 ) ?lfs3_sel : map_inst3_rs1phys;
+assign inst0_rs1phys_r1_o = (decode_inst0memAcc_r1 && decode_inst0writeRd_r1 && lfs0_v && ssit_inst0ssidvld_r1 ) ? lfs0_sel : map_inst0_rs1phys;
+assign inst1_rs1phys_r1_o = (decode_inst1memAcc_r1 && decode_inst1writeRd_r1 && lfs1_v && ssit_inst1ssidvld_r1 ) ? lfs1_sel : map_inst1_rs1phys;
+assign inst2_rs1phys_r1_o = (decode_inst2memAcc_r1 && decode_inst2writeRd_r1 && lfs2_v && ssit_inst2ssidvld_r1 ) ? lfs2_sel : map_inst2_rs1phys;
+assign inst3_rs1phys_r1_o = (decode_inst3memAcc_r1 && decode_inst3writeRd_r1 && lfs3_v && ssit_inst3ssidvld_r1 ) ? lfs3_sel : map_inst3_rs1phys;
 
 assign inst0_rs2phys_r1_o = map_inst0_rs2phys;
 assign inst1_rs2phys_r1_o = map_inst1_rs2phys;

@@ -48,7 +48,7 @@ module ram_8p #(
   begin
     if (!reset_n)
       for (index_tmp = 0; index_tmp < INDEXSIZE; index_tmp = index_tmp + 1)
-        ram_f[index_tmp] = INITVALUE;
+        ram_f[index_tmp] <= INITVALUE;
     else
       begin
       if (we1_in)

@@ -92,7 +92,7 @@ end
 always @(posedge clock or negedge reset_n)
 begin
   if (!reset_n)
-    lfs_v_f = 128'b0;
+    lfs_v_f <= 128'b0;
   // on any flush, invalidate all entries
   else if (flush_in)
     lfs_v_f <= 128'b0;
