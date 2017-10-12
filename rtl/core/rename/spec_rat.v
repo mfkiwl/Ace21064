@@ -15,7 +15,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 
 module spec_rat(
-  input wire              clock
+  input wire              clock,
   // source operands
   input wire [4:0]        inst0_ars1_i, 
   input wire [4:0]        inst0_ars2_i,     
@@ -52,20 +52,20 @@ module spec_rat(
   input wire [32*7-1 : 0] arch_rat_rec_data_i,
   input wire              arch_stall_i,
   // physical mapping for each source operands, determined by the rat
-  output [6:0]            inst0_prs1_o,
-  output [6:0]            inst1_prs1_o,
-  output [6:0]            inst2_prs1_o,
-  output [6:0]            inst3_prs1_o,
+  output reg [6:0]            inst0_prs1_o,
+  output reg [6:0]            inst1_prs1_o,
+  output reg [6:0]            inst2_prs1_o,
+  output reg [6:0]            inst3_prs1_o,
 
-  output [6:0]            inst0_prs2_o,
-  output [6:0]            inst1_prs2_o,
-  output [6:0]            inst2_prs2_o,
-  output [6:0]            inst3_prs2_o,
+  output reg [6:0]            inst0_prs2_o,
+  output reg [6:0]            inst1_prs2_o,
+  output reg [6:0]            inst2_prs2_o,
+  output reg [6:0]            inst3_prs2_o,
 
-  output [6:0]            inst0_ard_o,
-  output [6:0]            inst1_ard_o,
-  output [6:0]            inst2_ard_o,
-  output [6:0]            inst3_ard_o
+  output reg [6:0]            inst0_ard_o,
+  output reg [6:0]            inst1_ard_o,
+  output reg [6:0]            inst2_ard_o,
+  output reg [6:0]            inst3_ard_o
 );
 
 // RAT memory file data width 7, data depth 32
@@ -101,133 +101,52 @@ begin
     endcase
 end
 
-/*
-  RAM_12P #(
-       7,    // Data width
-      32,    // index size
-       5,    // log(index size)
-       0     // iniitial value
-  )
-  ratfile_ram(
-           .clock(clock),
-           .reset(1'b0),
-           // read ports
-           // 8 read ports, becaurse of 8 source register for 4 instructions
-           // in worst case
-           .data1_in(),
-           .index1_in(inst0_ars1_i),
-           .we1_in(1'b0),
-           .data2_in(),
-           .index2_in(inst0_ars2_i),
-           .we2_in(1'b0),
-           .data3_in(),
-           .index3_in(inst1_ars1_i),
-           .we3_in(1'b0),
-           .data4_in(),
-           .index4_in(inst1_ars2_i),
-           .we4_in(1'b0),
-           .data5_in(),
-           .index5_in(inst2_ars1_i),
-           .we5_in(1'b0),
-           .data6_in(),
-           .index6_in(inst2_ars2_i),
-           .we6_in(1'b0),
-           .data7_in(),
-           .index7_in(inst3_ars1_i),
-           .we7_in(1'b0),
-           .data8_in(),
-           .index8_in(inst3_ars2_i),
-           .we8_in(1'b0),
-           // write ports
-           // 4 write ports, 4 dest register for 4 instructions in worst case
-           .data9_in  (inst0_prd_i),
-           .index9_in (inst0_ard_i),
-           .we9_in    (inst0_rd_we_i & ~arch_stall_i),
-
-           .data10_in (inst1_prd_i),
-           .index10_in(inst1_ard_i),
-           .we10_in   (inst1_rd_we_i & ~arch_stall_i),
-           .data11_in (inst2_prd_i),
-           .index11_in(inst2_ard_i),
-           .we11_in   (inst2_rd_we_i & ~arch_stall_i),
-           .data12_in (inst3_prd_i),
-           .index12_in(inst3_ard_i),
-           .we12_in   (inst3_rd_we_i & ~arch_stall_i),
-
-           .data1_out (inst0_prs1_o),
-           .data2_out (inst0_prs2_o),
-           .data3_out (inst1_prs1_o),
-           .data4_out (inst1_prs2_o),
-           .data5_out (inst2_prs1_o),
-           .data6_out (inst2_prs2_o),
-           .data7_out (inst3_prs1_o),
-           .data8_out (inst3_prs2_o),
-           .data9_out (inst0_ard_o),
-           .data10_out(inst1_ard_o),
-           .data11_out(inst2_ard_o),
-           .data12_out(inst3_ard_o)
-          );
-*/
-
 `ifdef SIM
-integer TempInt;
+integer i;
 initial
 begin
-    for (TempInt = 0; TempInt < 32; TempInt = TempInt + 1)
-        ratfile_ram.ram_f[TempInt] = TempInt; //0-31 Arch maps to 0-31 Phys Initially
+    for (i = 0; i < 32; i = i + 1)
+        rat_mem[i] = i; //0-31 Arch maps to 0-31 Phys Initially
 end
 `endif
 
-  always @ (posedge clock)
-  begin
-    if (arch_rat_rec_i)
-      begin
-// hack
-#1
-`ifdef ACE_RENAME_ASSERT
-        $display("Mapping before reset");
-        for (TempInt=0; TempInt<32; TempInt=TempInt+1)
-          $display("%d: %d", TempInt, ratfile[TempInt]);
-`endif // ACE_RENAME_ASSERT
-        ratfile_ram.ram_f[0]  = arch_rat_rec_data_i[6:0];
-        ratfile_ram.ram_f[1]  = arch_rat_rec_data_i[13:7];
-        ratfile_ram.ram_f[2]  = arch_rat_rec_data_i[20:14];
-        ratfile_ram.ram_f[3]  = arch_rat_rec_data_i[27:21];
-        ratfile_ram.ram_f[4]  = arch_rat_rec_data_i[34:28];
-        ratfile_ram.ram_f[5]  = arch_rat_rec_data_i[41:35];
-        ratfile_ram.ram_f[6]  = arch_rat_rec_data_i[48:42];
-        ratfile_ram.ram_f[7]  = arch_rat_rec_data_i[55:49];
-        ratfile_ram.ram_f[8]  = arch_rat_rec_data_i[62:56];
-        ratfile_ram.ram_f[9]  = arch_rat_rec_data_i[69:63];
-        ratfile_ram.ram_f[10] = arch_rat_rec_data_i[76:70];
-        ratfile_ram.ram_f[11] = arch_rat_rec_data_i[83:77];
-        ratfile_ram.ram_f[12] = arch_rat_rec_data_i[90:84];
-        ratfile_ram.ram_f[13] = arch_rat_rec_data_i[97:91];
-        ratfile_ram.ram_f[14] = arch_rat_rec_data_i[104:98];
-        ratfile_ram.ram_f[15] = arch_rat_rec_data_i[111:105];
-        ratfile_ram.ram_f[16] = arch_rat_rec_data_i[118:112];
-        ratfile_ram.ram_f[17] = arch_rat_rec_data_i[125:119];
-        ratfile_ram.ram_f[18] = arch_rat_rec_data_i[132:126];
-        ratfile_ram.ram_f[19] = arch_rat_rec_data_i[139:133];
-        ratfile_ram.ram_f[20] = arch_rat_rec_data_i[146:140];
-        ratfile_ram.ram_f[21] = arch_rat_rec_data_i[153:147];
-        ratfile_ram.ram_f[22] = arch_rat_rec_data_i[160:154];
-        ratfile_ram.ram_f[23] = arch_rat_rec_data_i[167:161];
-        ratfile_ram.ram_f[24] = arch_rat_rec_data_i[174:168];
-        ratfile_ram.ram_f[25] = arch_rat_rec_data_i[181:175];
-        ratfile_ram.ram_f[26] = arch_rat_rec_data_i[188:182];
-        ratfile_ram.ram_f[27] = arch_rat_rec_data_i[195:189];
-        ratfile_ram.ram_f[28] = arch_rat_rec_data_i[202:196];
-        ratfile_ram.ram_f[29] = arch_rat_rec_data_i[209:203];
-        ratfile_ram.ram_f[30] = arch_rat_rec_data_i[216:210];
-        ratfile_ram.ram_f[31] = arch_rat_rec_data_i[223:217];
-
-`ifdef ACE_RENAME_ASSERT
-        $display("Mapping after reset");
-        for (TempInt=0; TempInt<32; TempInt=TempInt+1)
-          $display("%d: %d", TempInt, ratfile[TempInt]);
-`endif // ACE_RENAME_ASSERT
-      end
-    end        
+always @ (posedge clock)
+begin
+  if (arch_rat_rec_i)
+    begin
+      rat_mem[0]  = arch_rat_rec_data_i[6:0];
+      rat_mem[1]  = arch_rat_rec_data_i[13:7];
+      rat_mem[2]  = arch_rat_rec_data_i[20:14];
+      rat_mem[3]  = arch_rat_rec_data_i[27:21];
+      rat_mem[4]  = arch_rat_rec_data_i[34:28];
+      rat_mem[5]  = arch_rat_rec_data_i[41:35];
+      rat_mem[6]  = arch_rat_rec_data_i[48:42];
+      rat_mem[7]  = arch_rat_rec_data_i[55:49];
+      rat_mem[8]  = arch_rat_rec_data_i[62:56];
+      rat_mem[9]  = arch_rat_rec_data_i[69:63];
+      rat_mem[10] = arch_rat_rec_data_i[76:70];
+      rat_mem[11] = arch_rat_rec_data_i[83:77];
+      rat_mem[12] = arch_rat_rec_data_i[90:84];
+      rat_mem[13] = arch_rat_rec_data_i[97:91];
+      rat_mem[14] = arch_rat_rec_data_i[104:98];
+      rat_mem[15] = arch_rat_rec_data_i[111:105];
+      rat_mem[16] = arch_rat_rec_data_i[118:112];
+      rat_mem[17] = arch_rat_rec_data_i[125:119];
+      rat_mem[18] = arch_rat_rec_data_i[132:126];
+      rat_mem[19] = arch_rat_rec_data_i[139:133];
+      rat_mem[20] = arch_rat_rec_data_i[146:140];
+      rat_mem[21] = arch_rat_rec_data_i[153:147];
+      rat_mem[22] = arch_rat_rec_data_i[160:154];
+      rat_mem[23] = arch_rat_rec_data_i[167:161];
+      rat_mem[24] = arch_rat_rec_data_i[174:168];
+      rat_mem[25] = arch_rat_rec_data_i[181:175];
+      rat_mem[26] = arch_rat_rec_data_i[188:182];
+      rat_mem[27] = arch_rat_rec_data_i[195:189];
+      rat_mem[28] = arch_rat_rec_data_i[202:196];
+      rat_mem[29] = arch_rat_rec_data_i[209:203];
+      rat_mem[30] = arch_rat_rec_data_i[216:210];
+      rat_mem[31] = arch_rat_rec_data_i[223:217];
+    end
+  end        
 
   endmodule

@@ -48,8 +48,8 @@ wire       update_port0_we;
 wire       update_port1_we;
 wire [6:0] ssid_new;
 
-reg [6:0] ssit_f [`SSIT_SIZE-1 :0];
-reg       ssit_v_f [`SSIT_SIZE-1 :0];
+reg [6:0] ssit_f [4096-1 :0];
+reg       ssit_v_f [4096-1 :0];
 
 
 /* 
@@ -67,6 +67,7 @@ assign valid1_out = ssit_v_f[index1_in];
 assign valid2_out = ssit_v_f[index2_in];
 assign valid3_out = ssit_v_f[index3_in];
 
+integer i;
 always @(posedge clock or negedge reset_n)
 begin
   if (!reset_n)
@@ -85,7 +86,7 @@ begin
       2'b00:
             begin
             // invalidate all current entries with new ssid
-            for (i=0; i<`SSIT_SIZE; i=i+1)
+            for (i=0; i<4096; i=i+1)
               if (ssit_f[i] == ssid_f)
                 ssit_v_f[i] <= 1'b0;
             // create new store set group

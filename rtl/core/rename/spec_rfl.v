@@ -58,23 +58,23 @@ module spec_rfl(
   input wire            retire7_rls_rd_vld_i, 
   input wire            arch_stall_i,
   // output register contains free register if requested
-  output                spec_rfl_stall_o,
-  output [6:0]          inst0_freereg_o,
-  output [6:0]          inst1_freereg_o,
-  output [6:0]          inst2_freereg_o,
-  output [6:0]          inst3_freereg_o,
+  output wire               spec_rfl_stall_o,
+  output reg [6:0]          inst0_freereg_o,
+  output reg [6:0]          inst1_freereg_o,
+  output reg [6:0]          inst2_freereg_o,
+  output reg [6:0]          inst3_freereg_o,
   // to indicate the output register is valid or not
-  output                inst0_freereg_vld_o,
-  output                inst1_freereg_vld_o,
-  output                inst2_freereg_vld_o,
-  output                inst3_freereg_vld_o
+  output wire               inst0_freereg_vld_o,
+  output wire               inst1_freereg_vld_o,
+  output wire               inst2_freereg_vld_o,
+  output wire               inst3_freereg_vld_o
 );
 
   reg [5:0] cur_head_ptr;
   reg [5:0] cur_tail_ptr;
   reg [5:0] free_pr_cnt;        // number of available free regs
-  reg [5:0] freereg_req_total;	// total freeregister request in current cycle 
-  reg [5:0] freereg_ret_total;  // total register freeed in retire stage current cycle
+  wire [5:0] freereg_req_total;	// total freeregister request in current cycle 
+  wire [5:0] freereg_ret_total;  // total register freeed in retire stage current cycle
 
   // RAM port wires
   reg [5:0] wport0_idx; // write port0 index 
@@ -128,15 +128,16 @@ module spec_rfl(
   // 8 write ports for 8 width retire,(get free register)
   always @ ( posedge clock )
   begin
-      case (we[7:0])
-      8'b00000001 : rfl_mem[wport0_idx] <= data[0]; 
-      8'b0000001? : rfl_mem[wport1_idx] <= data[1]; 
-      8'b000001?? : rfl_mem[wport2_idx] <= data[2]; 
-      8'b00001??? : rfl_mem[wport3_idx] <= data[3]; 
-      8'b0001???? : rfl_mem[wport4_idx] <= data[4]; 
-      8'b001????? : rfl_mem[wport5_idx] <= data[5]; 
-      8'b01?????? : rfl_mem[wport6_idx] <= data[6]; 
-      8'b1??????? : rfl_mem[wport7_idx] <= data[7]; 
+      case ({wport7_we,wport6_we,wport5_we,wport4_we,
+             wport3_we,wport2_we,wport1_we,wport0_we})
+      8'b00000001 : rfl_mem[wport0_idx] <= wport0_data; 
+      8'b0000001? : rfl_mem[wport1_idx] <= wport1_data; 
+      8'b000001?? : rfl_mem[wport2_idx] <= wport2_data; 
+      8'b00001??? : rfl_mem[wport3_idx] <= wport3_data; 
+      8'b0001???? : rfl_mem[wport4_idx] <= wport4_data; 
+      8'b001????? : rfl_mem[wport5_idx] <= wport5_data; 
+      8'b01?????? : rfl_mem[wport6_idx] <= wport6_data; 
+      8'b1??????? : rfl_mem[wport7_idx] <= wport7_data; 
       default     : ;
       endcase
   end
@@ -247,7 +248,7 @@ module spec_rfl(
     begin
       cur_head_ptr <= nxt_tail_ptr;
       cur_tail_ptr <= nxt_tail_ptr;
-      free_pr_cnt <= (`NUM_PHYS_REGS-32);
+      free_pr_cnt <= (80-32);     // phys reg num - arch reg num
     end
     else
     begin

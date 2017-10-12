@@ -4,50 +4,42 @@ module ram_8p #(
   parameter LOGINDEX  = 8,
   parameter INITVALUE = 0
 )(
-  input                clock,
-  input                reset_n,
-  input                we1_in,
-  input                we2_in,
-  input                we3_in,
-  input                we4_in,
-  input                we5_in,
-  input                we6_in,
-  input                we7_in,
-  input                we8_in,
-  input [DATAWIDTH-1:0] data1_in,
-  input [DATAWIDTH-1:0] data2_in,
-  input [DATAWIDTH-1:0] data3_in,
-  input [DATAWIDTH-1:0] data4_in,
-  input [DATAWIDTH-1:0] data5_in,
-  input [DATAWIDTH-1:0] data6_in,
-  input [DATAWIDTH-1:0] data7_in,
-  input [DATAWIDTH-1:0] data8_in,
-  input [LOGINDEX-1:0] index1_in,
-  input [LOGINDEX-1:0] index2_in,
-  input [LOGINDEX-1:0] index3_in,
-  input [LOGINDEX-1:0] index4_in,
-  input [LOGINDEX-1:0] index5_in,
-  input [LOGINDEX-1:0] index6_in,
-  input [LOGINDEX-1:0] index7_in,
-  input [LOGINDEX-1:0] index8_in,
-  output [DATAWIDTH-1:0] data1_out,
-  output [DATAWIDTH-1:0] data2_out,
-  output [DATAWIDTH-1:0] data3_out,
-  output [DATAWIDTH-1:0] data4_out,
-  output [DATAWIDTH-1:0] data5_out,
-  output [DATAWIDTH-1:0] data6_out,
-  output [DATAWIDTH-1:0] data7_out,
-  output [DATAWIDTH-1:0] data8_out
+  input wire                 clock,
+  input wire                 reset_n,
+  input wire                 we1_in,
+  input wire                 we2_in,
+  input wire                 we3_in,
+  input wire                 we4_in,
+  input wire                 we5_in,
+  input wire                 we6_in,
+  input wire                 we7_in,
+  input wire                 we8_in,
+  input wire [DATAWIDTH-1:0] data1_in,
+  input wire [DATAWIDTH-1:0] data2_in,
+  input wire [DATAWIDTH-1:0] data3_in,
+  input wire [DATAWIDTH-1:0] data4_in,
+  input wire [DATAWIDTH-1:0] data5_in,
+  input wire [DATAWIDTH-1:0] data6_in,
+  input wire [DATAWIDTH-1:0] data7_in,
+  input wire [DATAWIDTH-1:0] data8_in,
+  input wire [ LOGINDEX-1:0] index1_in,
+  input wire [ LOGINDEX-1:0] index2_in,
+  input wire [ LOGINDEX-1:0] index3_in,
+  input wire [ LOGINDEX-1:0] index4_in,
+  input wire [ LOGINDEX-1:0] index5_in,
+  input wire [ LOGINDEX-1:0] index6_in,
+  input wire [ LOGINDEX-1:0] index7_in,
+  input wire [ LOGINDEX-1:0] index8_in,
+  output reg [DATAWIDTH-1:0] data1_out,
+  output reg [DATAWIDTH-1:0] data2_out,
+  output reg [DATAWIDTH-1:0] data3_out,
+  output reg [DATAWIDTH-1:0] data4_out,
+  output reg [DATAWIDTH-1:0] data5_out,
+  output reg [DATAWIDTH-1:0] data6_out,
+  output reg [DATAWIDTH-1:0] data7_out,
+  output reg [DATAWIDTH-1:0] data8_out
 );
 
-  reg [DATAWIDTH-1:0] data1_out;
-  reg [DATAWIDTH-1:0] data2_out;
-  reg [DATAWIDTH-1:0] data3_out;
-  reg [DATAWIDTH-1:0] data4_out;
-  reg [DATAWIDTH-1:0] data5_out;
-  reg [DATAWIDTH-1:0] data6_out;
-  reg [DATAWIDTH-1:0] data7_out;
-  reg [DATAWIDTH-1:0] data8_out;
 
   reg [DATAWIDTH-1:0] ram_f [INDEXSIZE-1:0];
   reg [LOGINDEX:0] index_tmp;

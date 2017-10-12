@@ -22,13 +22,13 @@ module dep_chk_ssit(
     input       ssid2_vld_i,
     input       ssid3_vld_i,
     
-    input       type0_i;        // 1 for stores
-    input       type1_i;        // 1 for stores
-    input       type2_i;        // 1 for stores
+    input       type0_i,        // 1 for stores
+    input       type1_i,        // 1 for stores
+    input       type2_i,        // 1 for stores
     
-    output reg       ssid1sel_o;
-    output reg [1:0] ssid2sel_o;
-    output reg [1:0] ssid3sel_o;
+    output reg       ssid1sel_o,
+    output reg [1:0] ssid2sel_o,
+    output reg [1:0] ssid3sel_o
 );
 
 // generate ssid1sel_o

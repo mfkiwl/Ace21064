@@ -29,20 +29,18 @@ module lfst(
     input [ 7:0] invalidate0_in,// [7:1] - register number to invalidate; 0 - valid bit
     input [ 7:0] invalidate1_in,
     	
-    output [6:0] lfs0_out,
-    output [6:0] lfs1_out,
-    output [6:0] lfs2_out,
-    output [6:0] lfs3_out,
-    output       valid0_out,
-    output       valid1_out,
-    output       valid2_out,
-    output       valid3_out
+    output wire [6:0] lfs0_out,
+    output wire [6:0] lfs1_out,
+    output wire [6:0] lfs2_out,
+    output wire [6:0] lfs3_out,
+    output reg        valid0_out,
+    output reg        valid1_out,
+    output reg        valid2_out,
+    output reg        valid3_out
 );
 
 
 integer i;
-
-reg valid0_out, valid1_out, valid2_out, valid3_out;
 
 reg [127 : 0] lfs_v_f;
 

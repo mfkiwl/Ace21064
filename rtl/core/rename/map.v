@@ -65,15 +65,15 @@ module map (
 
     assign inst0_rs1phys_o = inst0_rs1phys_i;
     assign inst0_rs2phys_o = inst0_rs2phys_i;
-    assign inst1_rs1phys_o = inst1_rs1sel_i[1] ? `ERROR          : 
+    assign inst1_rs1phys_o = inst1_rs1sel_i[1] ? 7'bxxxxxxx      : 
                             (inst1_rs1sel_i[0] ? inst1_rs1phys_i : inst0_rdphys_i);
-    assign inst1_rs2phys_o = inst1_rs2sel_i[1] ? `ERROR          : 
+    assign inst1_rs2phys_o = inst1_rs2sel_i[1] ? 7'bxxxxxxx      : 
                             (inst1_rs2sel_i[0] ? inst1_rs2phys_i : inst0_rdphys_i);
     assign inst2_rs1phys_o = inst2_rs1sel_i[1] ? 
-                            (inst2_rs1sel_i[0] ? `ERROR          : inst2_rs1phys_i):
+                            (inst2_rs1sel_i[0] ? 7'bxxxxxxx      : inst2_rs1phys_i):
                             (inst2_rs1sel_i[0] ? inst1_rdphys_i  : inst0_rdphys_i );
     assign inst2_rs2phys_o = inst2_rs2sel_i[1] ? 
-                            (inst2_rs2sel_i[0] ? `ERROR          : inst2_rs2phys_i):
+                            (inst2_rs2sel_i[0] ? 7'bxxxxxxx      : inst2_rs2phys_i):
                             (inst2_rs2sel_i[0] ? inst1_rdphys_i  : inst0_rdphys_i );
     assign inst3_rs1phys_o = inst3_rs1sel_i[1] ?
                             (inst3_rs1sel_i[0] ? inst3_rs1phys_i : inst2_rdphys_i):
@@ -83,10 +83,10 @@ module map (
                             (inst3_rs2sel_i[0] ? inst1_rdphys_i  : inst0_rdphys_i);
                 
     assign inst0_rdphys_o  = inst0_oldrdphys_i; 
-    assign inst1_rdphys_o  = inst1_rdsel_i[1] ? `ERROR           :
+    assign inst1_rdphys_o  = inst1_rdsel_i[1] ? 7'bxxxxxxx       :
                             (inst1_rdsel_i[0] ? inst1_oldrdphys_i: inst0_rdphys_i); 
     assign inst2_rdphys_o  = inst2_rdsel_i[1] ? 
-                            (inst2_rdsel_i[0] ? `ERROR           : inst2_oldrdphys_i):
+                            (inst2_rdsel_i[0] ? 7'bxxxxxxx       : inst2_oldrdphys_i):
                             (inst2_rdsel_i[0] ? inst1_rdphys_i   : inst0_rdphys_i   );
     assign inst3_rdphys_o  = inst3_rdsel_i[1] ?
                             (inst3_rdsel_i[0] ? inst3_oldrdphys_i: inst2_rdphys_i):
