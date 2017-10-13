@@ -3,9 +3,9 @@
 //  File Name   : ssit.v
 //  Author      : ejune@aureage.com
 //                
-//  Description : This file contains a store set ID table for memory dependence prediction
-//                
-//                
+//  Description : This file contains a store set Identifier table (SSIT) for memory
+//                dependence prediction, which contains the store sets using
+//                a common tag for each load and the stores in store set
 //                
 //  Create Date : original_time
 //  Version     : v0.1 

@@ -528,12 +528,12 @@ lfst i_lfst(
 // store set predictions
 assign lfs0_sel = lfs0_out;
 
-assign lfs1_sel = depchkssit_inst1ssidsel_r1 ? lfs1_out : specrfl_inst0freereg_r1;
+assign lfs1_sel = depchkssit_inst1ssidsel_r1    ? lfs1_out                : specrfl_inst0freereg_r1;
 assign lfs2_sel = depchkssit_inst2ssidsel_r1[1] ? 
-                 (depchkssit_inst2ssidsel_r1[0] ? lfs3_out        : lfs2_out):
+                 (depchkssit_inst2ssidsel_r1[0] ? lfs3_out                : lfs2_out):
                  (depchkssit_inst2ssidsel_r1[0] ? specrfl_inst1freereg_r1 : specrfl_inst0freereg_r1);
 assign lfs3_sel = depchkssit_inst3ssidsel_r1[1] ?
-                 (depchkssit_inst3ssidsel_r1[0] ? lfs3_out        : specrfl_inst2freereg_r1):
+                 (depchkssit_inst3ssidsel_r1[0] ? lfs3_out                : specrfl_inst2freereg_r1):
                  (depchkssit_inst3ssidsel_r1[0] ? specrfl_inst1freereg_r1 : specrfl_inst0freereg_r1);
 
 // do the same thing for the valid bits.  if the same bundle isn't selected,

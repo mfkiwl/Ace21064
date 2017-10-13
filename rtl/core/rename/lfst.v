@@ -3,31 +3,35 @@
 //  File Name   : lfst.v
 //  Author      : ejune@aureage.com
 //                
-//  Description : This file contains a last fetched store table for memory
-//                dependence prediction.
+//  Description : This file contains a last fetched store table (LFST) which
+//                maintains dynamic information about the most recently
+//                fetched store for each store set, the information in this
+//                table is the inum of the store, which is a hardware pointer
+//                that uniquely identifies the instance of each instruction in
+//                flight 
 //                
 //  Create Date : original_time
 //  Version     : v0.1 
 //
 /////////////////////////////////////////////////////////////////////////////////////////
 module lfst(
-    input        clock,
-    input        reset_n,
-    input        flush_in,
-    input [ 6:0] ssid0_in,
-    input [ 6:0] ssid1_in,
-    input [ 6:0] ssid2_in,
-    input [ 6:0] ssid3_in,
-    input        valid0_in,
-    input        valid1_in,
-    input        valid2_in,
-    input        valid3_in,
-    input [14:0] update0_in,//[14:8] - ssid to update;[ 7:1] - register number to update with;0:vld
-    input [14:0] update1_in,
-    input [14:0] update2_in,
-    input [14:0] update3_in,
-    input [ 7:0] invalidate0_in,// [7:1] - register number to invalidate; 0 - valid bit
-    input [ 7:0] invalidate1_in,
+    input wire        clock,
+    input wire        reset_n,
+    input wire        flush_in,
+    input wire [ 6:0] ssid0_in,
+    input wire [ 6:0] ssid1_in,
+    input wire [ 6:0] ssid2_in,
+    input wire [ 6:0] ssid3_in,
+    input wire        valid0_in,
+    input wire        valid1_in,
+    input wire        valid2_in,
+    input wire        valid3_in,
+    input wire [14:0] update0_in,//[14:8] - ssid to update;[ 7:1] - register number to update with;0:vld
+    input wire [14:0] update1_in,
+    input wire [14:0] update2_in,
+    input wire [14:0] update3_in,
+    input wire [ 7:0] invalidate0_in,// [7:1] - register number to invalidate; 0 - valid bit
+    input wire [ 7:0] invalidate1_in,
     	
     output wire [6:0] lfs0_out,
     output wire [6:0] lfs1_out,
