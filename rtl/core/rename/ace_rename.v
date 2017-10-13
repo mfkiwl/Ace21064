@@ -40,8 +40,10 @@ module ace_rename(
     input wire        decode_inst2memacc_i,
     input wire        decode_inst3memacc_i,
 
-    input wire [ 7:0] lfst_inv0_i,
-    input wire [ 7:0] lfst_inv1_i,
+    input wire        retire_lfst_invld0_i,
+    input wire        retire_lfst_invld1_i,
+    input wire [ 6:0] retire_lfst_invld_idx0_i,
+    input wire [ 6:0] retire_lfst_invld_idx1_i,
     input wire        retire_flush_i,
     input wire        retire_flush_r_i,
     input wire        pipe_stall_i,
@@ -69,18 +71,18 @@ module ace_rename(
     input wire        l1dcache_ssitwe_i,
 
     output wire        rename_specrfl_stall_o,
-    output wire  [6:0] inst0_rs1phys_r1_o,
-    output wire  [6:0] inst1_rs1phys_r1_o,
-    output wire  [6:0] inst2_rs1phys_r1_o,
-    output wire  [6:0] inst3_rs1phys_r1_o,
-    output wire  [6:0] inst0_rs2phys_r1_o,
-    output wire  [6:0] inst1_rs2phys_r1_o,
-    output wire  [6:0] inst2_rs2phys_r1_o,
-    output wire  [6:0] inst3_rs2phys_r1_o,
-    output wire  [6:0] inst0_oldrdphys_r1_o,
-    output wire  [6:0] inst1_oldrdphys_r1_o,
-    output wire  [6:0] inst2_oldrdphys_r1_o,
-    output wire  [6:0] inst3_oldrdphys_r1_o
+    output wire  [6:0] rename_inst0rs1phys_r1_o,
+    output wire  [6:0] rename_inst1rs1phys_r1_o,
+    output wire  [6:0] rename_inst2rs1phys_r1_o,
+    output wire  [6:0] rename_inst3rs1phys_r1_o,
+    output wire  [6:0] rename_inst0rs2phys_r1_o,
+    output wire  [6:0] rename_inst1rs2phys_r1_o,
+    output wire  [6:0] rename_inst2rs2phys_r1_o,
+    output wire  [6:0] rename_inst3rs2phys_r1_o,
+    output wire  [6:0] rename_inst0oldrdphys_r1_o,
+    output wire  [6:0] rename_inst1oldrdphys_r1_o,
+    output wire  [6:0] rename_inst2oldrdphys_r1_o,
+    output wire  [6:0] rename_inst3oldrdphys_r1_o
 
 );
 
@@ -114,71 +116,113 @@ module ace_rename(
     wire [1:0] depchk_inst2_rdsel;
     wire [1:0] depchk_inst3_rdsel;
 
-wire [6:0] specrat_inst0_rdarch, specrat_inst1_rdarch, specrat_inst2_rdarch, specrat_inst3_rdarch;
+    wire [6:0] specrat_inst0_rdarch;
+    wire [6:0] specrat_inst1_rdarch;
+    wire [6:0] specrat_inst2_rdarch;
+    wire [6:0] specrat_inst3_rdarch;
+    
+    wire [6:0] ssid0_out;
+    wire [6:0] ssid1_out;
+    wire [6:0] ssid2_out;
+    wire [6:0] ssid3_out;
+    wire       ssid0_v_out;
+    wire       ssid1_v_out;
+    wire       ssid2_v_out;
+    wire       ssid3_v_out;
+    wire       ssid1sel_out;
+    wire [1:0] ssid2sel_out;
+    wire [1:0] ssid3sel_out;
+    
+    wire [6:0] map_inst0_rs1phys;
+    wire [6:0] map_inst1_rs1phys;
+    wire [6:0] map_inst2_rs1phys;
+    wire [6:0] map_inst3_rs1phys;
+    wire [6:0] map_inst0_rs2phys;
+    wire [6:0] map_inst1_rs2phys;
+    wire [6:0] map_inst2_rs2phys;
+    wire [6:0] map_inst3_rs2phys;
+    wire [6:0] map_inst0_rdphys;
+    wire [6:0] map_inst1_rdphys;
+    wire [6:0] map_inst2_rdphys;
+    wire [6:0] map_inst3_rdphys;
 
-wire [6:0] ssid0_out, ssid1_out, ssid2_out, ssid3_out;
-wire ssid0_v_out, ssid1_v_out, ssid2_v_out, ssid3_v_out;
-wire ssid1sel_out;
-wire [1:0] ssid2sel_out, ssid3sel_out;
+    wire [6:0] lfst_inst0lfs;
+    wire [6:0] lfst_inst1lfs;
+    wire [6:0] lfst_inst2lfs;
+    wire [6:0] lfst_inst3lfs;
+    wire       lfst_inst0lfsvld;
+    wire       lfst_inst1lfsvld;
+    wire       lfst_inst2lfsvld;
+    wire       lfst_inst3lfsvld;
+    
+    wire [6:0] inst0_lfs;
+    wire [6:0] inst1_lfs;
+    wire [6:0] inst2_lfs;
+    wire [6:0] inst3_lfs;
+    wire       inst0_lfs_vld;
+    wire       inst1_lfs_vld;
+    wire       inst2_lfs_vld;
+    wire       inst3_lfs_vld;
+    // pipe registers
+    reg  [1:0]     depchk_inst0rdsel_r1;
+    reg  [1:0]     depchk_inst1rdsel_r1;
+    reg  [1:0]     depchk_inst2rdsel_r1;
+    reg  [1:0]     depchk_inst3rdsel_r1;
+    reg  [1:0]     depchk_inst0rs1sel_r1;
+    reg  [1:0]     depchk_inst1rs1sel_r1;
+    reg  [1:0]     depchk_inst2rs1sel_r1;
+    reg  [1:0]     depchk_inst3rs1sel_r1;
+    reg  [1:0]     depchk_inst0rs2sel_r1;
+    reg  [1:0]     depchk_inst1rs2sel_r1;
+    reg  [1:0]     depchk_inst2rs2sel_r1;
+    reg  [1:0]     depchk_inst3rs2sel_r1;
+    reg  [6:0]     specrat_inst0rs1phys_r1;
+    reg  [6:0]     specrat_inst1rs1phys_r1;
+    reg  [6:0]     specrat_inst2rs1phys_r1;
+    reg  [6:0]     specrat_inst3rs1phys_r1;
+    reg  [6:0]     specrat_inst0rs2phys_r1;
+    reg  [6:0]     specrat_inst1rs2phys_r1;
+    reg  [6:0]     specrat_inst2rs2phys_r1;
+    reg  [6:0]     specrat_inst3rs2phys_r1;
+    reg  [6:0]     specrfl_inst0freereg_r1;
+    reg  [6:0]     specrfl_inst1freereg_r1;
+    reg  [6:0]     specrfl_inst2freereg_r1;
+    reg  [6:0]     specrfl_inst3freereg_r1;
+    reg  [6:0]     specrat_inst0rdarch_r1;
+    reg  [6:0]     specrat_inst1rdarch_r1;
+    reg  [6:0]     specrat_inst2rdarch_r1;
+    reg  [6:0]     specrat_inst3rdarch_r1;
+    reg  [6:0]     ssit_inst0ssid_r1;
+    reg  [6:0]     ssit_inst1ssid_r1;
+    reg  [6:0]     ssit_inst2ssid_r1;
+    reg  [6:0]     ssit_inst3ssid_r1;
+    reg            ssit_inst0ssidvld_r1;
+    reg            ssit_inst1ssidvld_r1;
+    reg            ssit_inst2ssidvld_r1;
+    reg            ssit_inst3ssidvld_r1;
+    reg  [1:0]     depchkssit_inst0ssidsel_r1;
+    reg  [1:0]     depchkssit_inst1ssidsel_r1;
+    reg  [1:0]     depchkssit_inst2ssidsel_r1;
+    reg  [1:0]     depchkssit_inst3ssidsel_r1;
+    
+    reg            decode_inst0writeRd_r1;
+    reg            decode_inst1writeRd_r1;
+    reg            decode_inst2writeRd_r1;
+    reg            decode_inst3writeRd_r1;
+    reg            decode_inst0memAcc_r1;
+    reg            decode_inst1memAcc_r1;
+    reg            decode_inst2memAcc_r1;
+    reg            decode_inst3memAcc_r1;
 
-wire [6:0] map_inst0_rs1phys, map_inst1_rs1phys, map_inst2_rs1phys, map_inst3_rs1phys;
-wire [6:0] map_inst0_rs2phys, map_inst1_rs2phys, map_inst2_rs2phys, map_inst3_rs2phys;
-wire [6:0] lfs0_out, lfs1_out, lfs2_out, lfs3_out;
-wire [6:0] map_inst0_rdphys, map_inst1_rdphys, map_inst2_rdphys, map_inst3_rdphys;
-wire valid0_out, valid1_out, valid2_out, valid3_out;
+    wire inst0_st_vld = !decode_inst0writeRd_i & decode_inst0memacc_i;
+    wire inst1_st_vld = !decode_inst1writeRd_i & decode_inst1memacc_i;
+    wire inst2_st_vld = !decode_inst2writeRd_i & decode_inst2memacc_i;
+    wire inst3_st_vld = !decode_inst3writeRd_i & decode_inst3memacc_i;
+    wire inst0_ld_vld =  decode_inst0writeRd_i & decode_inst0memacc_i;
+    wire inst1_ld_vld =  decode_inst1writeRd_i & decode_inst1memacc_i;
+    wire inst2_ld_vld =  decode_inst2writeRd_i & decode_inst2memacc_i;
+    wire inst3_ld_vld =  decode_inst3writeRd_i & decode_inst3memacc_i;
 
-wire [6:0] lfs0_sel, lfs1_sel, lfs2_sel, lfs3_sel;
-wire lfs0_v, lfs1_v, lfs2_v, lfs3_v;
-// pipe registers
-reg  [1:0]     depchk_inst0rdsel_r1;
-reg  [1:0]     depchk_inst1rdsel_r1;
-reg  [1:0]     depchk_inst2rdsel_r1;
-reg  [1:0]     depchk_inst3rdsel_r1;
-reg  [1:0]     depchk_inst0rs1sel_r1;
-reg  [1:0]     depchk_inst1rs1sel_r1;
-reg  [1:0]     depchk_inst2rs1sel_r1;
-reg  [1:0]     depchk_inst3rs1sel_r1;
-reg  [1:0]     depchk_inst0rs2sel_r1;
-reg  [1:0]     depchk_inst1rs2sel_r1;
-reg  [1:0]     depchk_inst2rs2sel_r1;
-reg  [1:0]     depchk_inst3rs2sel_r1;
-reg  [6:0]     specrat_inst0rs1phys_r1;
-reg  [6:0]     specrat_inst1rs1phys_r1;
-reg  [6:0]     specrat_inst2rs1phys_r1;
-reg  [6:0]     specrat_inst3rs1phys_r1;
-reg  [6:0]     specrat_inst0rs2phys_r1;
-reg  [6:0]     specrat_inst1rs2phys_r1;
-reg  [6:0]     specrat_inst2rs2phys_r1;
-reg  [6:0]     specrat_inst3rs2phys_r1;
-reg  [6:0]     specrfl_inst0freereg_r1;
-reg  [6:0]     specrfl_inst1freereg_r1;
-reg  [6:0]     specrfl_inst2freereg_r1;
-reg  [6:0]     specrfl_inst3freereg_r1;
-reg  [6:0]     specrat_inst0rdarch_r1;
-reg  [6:0]     specrat_inst1rdarch_r1;
-reg  [6:0]     specrat_inst2rdarch_r1;
-reg  [6:0]     specrat_inst3rdarch_r1;
-reg  [6:0]     ssit_inst0ssid_r1;
-reg  [6:0]     ssit_inst1ssid_r1;
-reg  [6:0]     ssit_inst2ssid_r1;
-reg  [6:0]     ssit_inst3ssid_r1;
-reg            ssit_inst0ssidvld_r1;
-reg            ssit_inst1ssidvld_r1;
-reg            ssit_inst2ssidvld_r1;
-reg            ssit_inst3ssidvld_r1;
-reg  [1:0]     depchkssit_inst0ssidsel_r1;
-reg  [1:0]     depchkssit_inst1ssidsel_r1;
-reg  [1:0]     depchkssit_inst2ssidsel_r1;
-reg  [1:0]     depchkssit_inst3ssidsel_r1;
-
-reg            decode_inst0writeRd_r1;
-reg            decode_inst1writeRd_r1;
-reg            decode_inst2writeRd_r1;
-reg            decode_inst3writeRd_r1;
-reg            decode_inst0memAcc_r1;
-reg            decode_inst1memAcc_r1;
-reg            decode_inst2memAcc_r1;
-reg            decode_inst3memAcc_r1;
 
 
 spec_rat i_spec_rat(
@@ -295,21 +339,21 @@ dep_chk i_dep_chk(
 ssit i_ssit(
     .clock                       (clock),
     .reset_n                     (reset_n),
-    .index0_in                   (pc_r0_i[13:2]),
-    .index1_in                   (pc_r0_i[13:2]),
-    .index2_in                   (pc_r0_i[13:2]),
-    .index3_in                   (pc_r0_i[13:2]),
-    .update_index1_in            (l1dcache_ssitidx1_i),
-    .update_index2_in            (l1dcache_ssitidx2_i),
-    .update_v_in                 (l1dcache_ssitwe_i),
-    .ssid0_out                   (ssid0_out),
-    .ssid1_out                   (ssid1_out),
-    .ssid2_out                   (ssid2_out),
-    .ssid3_out                   (ssid3_out),
-    .valid0_out                  (ssid0_v_out),
-    .valid1_out                  (ssid1_v_out),
-    .valid2_out                  (ssid2_v_out),
-    .valid3_out                  (ssid3_v_out)
+    .inst0_ssit_ridx_i           (pc_r0_i[13:2]),
+    .inst1_ssit_ridx_i           (pc_r0_i[13:2]),
+    .inst2_ssit_ridx_i           (pc_r0_i[13:2]),
+    .inst3_ssit_ridx_i           (pc_r0_i[13:2]),
+    .inst0_ssit_widx_i           (l1dcache_ssitidx1_i),
+    .inst1_ssit_widx_i           (l1dcache_ssitidx2_i),
+    .ssit_we_i                   (l1dcache_ssitwe_i),
+    .inst0_ssid_o                (ssid0_out),
+    .inst1_ssid_o                (ssid1_out),
+    .inst2_ssid_o                (ssid2_out),
+    .inst3_ssid_o                (ssid3_out),
+    .inst0_ssid_vld_o            (ssid0_v_out),
+    .inst1_ssid_vld_o            (ssid1_v_out),
+    .inst2_ssid_vld_o            (ssid2_v_out),
+    .inst3_ssid_vld_o            (ssid3_v_out)
 );
 
 dep_chk_ssit   i_dep_chk_ssit(
@@ -321,9 +365,9 @@ dep_chk_ssit   i_dep_chk_ssit(
     .ssid1_vld_i             (ssid1_v_out),
     .ssid2_vld_i             (ssid2_v_out),
     .ssid3_vld_i             (ssid3_v_out),
-    .type0_i                 (decode_inst0memacc_i & ~decode_inst0writeRd_i),
-    .type1_i                 (decode_inst1memacc_i & ~decode_inst0writeRd_i),
-    .type2_i                 (decode_inst2memacc_i & ~decode_inst0writeRd_i),
+    .type0_i                 (inst0_st_vld),
+    .type1_i                 (inst1_st_vld),
+    .type2_i                 (inst2_st_vld),
     .ssid1sel_o              (ssid1sel_out),
     .ssid2sel_o              (ssid2sel_out),
     .ssid3sel_o              (ssid3sel_out)
@@ -426,25 +470,25 @@ always @ (posedge clock or negedge reset_n)
 begin
     if(!reset_n)
     begin
-        decode_inst0writeRd_r1 <= 1'b0;
-        decode_inst1writeRd_r1 <= 1'b0;
-        decode_inst2writeRd_r1 <= 1'b0;
-        decode_inst3writeRd_r1 <= 1'b0;
-        decode_inst0memAcc_r1  <= 1'b0;
-        decode_inst1memAcc_r1  <= 1'b0;
-        decode_inst2memAcc_r1  <= 1'b0;
-        decode_inst3memAcc_r1  <= 1'b0;
+        inst0_st_vld_r1 <= 1'b0;
+        inst1_st_vld_r1 <= 1'b0;
+        inst2_st_vld_r1 <= 1'b0;
+        inst3_st_vld_r1 <= 1'b0;
+        inst0_ld_vld_r1 <= 1'b0;
+        inst1_ld_vld_r1 <= 1'b0;
+        inst2_ld_vld_r1 <= 1'b0;
+        inst3_ld_vld_r1 <= 1'b0;
     end
     else if(load)
     begin
-        decode_inst0writeRd_r1 <= decode_inst0writeRd_i;
-        decode_inst1writeRd_r1 <= decode_inst1writeRd_i;
-        decode_inst2writeRd_r1 <= decode_inst2writeRd_i;
-        decode_inst3writeRd_r1 <= decode_inst3writeRd_i;
-        decode_inst0memAcc_r1  <= decode_inst0memacc_i;
-        decode_inst1memAcc_r1  <= decode_inst1memacc_i;
-        decode_inst2memAcc_r1  <= decode_inst2memacc_i;
-        decode_inst3memAcc_r1  <= decode_inst3memacc_i;
+        inst0_st_vld_r1 <= inst0_st_vld;
+        inst1_st_vld_r1 <= inst1_st_vld;
+        inst2_st_vld_r1 <= inst2_st_vld;
+        inst3_st_vld_r1 <= inst3_st_vld;
+        inst0_ld_vld_r1 <= inst0_ld_vld;
+        inst1_ld_vld_r1 <= inst1_ld_vld;
+        inst2_ld_vld_r1 <= inst2_ld_vld;
+        inst3_ld_vld_r1 <= inst3_ld_vld;
     end
 end
 ///
@@ -495,72 +539,77 @@ map  i_map_override(
 lfst i_lfst(
     .clock                 (clock),
     .reset_n               (reset_n),
-    .flush_in              (retire_flush_i),
-    .ssid0_in              (ssit_inst0ssid_r1),
-    .ssid1_in              (ssit_inst1ssid_r1),
-    .ssid2_in              (ssit_inst2ssid_r1),
-    .ssid3_in              (ssit_inst3ssid_r1),
-    .valid0_in             (ssit_inst0ssidvld_r1),
-    .valid1_in             (ssit_inst1ssidvld_r1),
-    .valid2_in             (ssit_inst2ssidvld_r1),
-    .valid3_in             (ssit_inst3ssidvld_r1),
+    .flush_i               (retire_flush_i),
+    .inst0_ssid_i          (ssit_inst0ssid_r1),
+    .inst1_ssid_i          (ssit_inst1ssid_r1),
+    .inst2_ssid_i          (ssit_inst2ssid_r1),
+    .inst3_ssid_i          (ssit_inst3ssid_r1),
+    .inst0_ssid_vld_i      (ssit_inst0ssidvld_r1),
+    .inst1_ssid_vld_i      (ssit_inst1ssidvld_r1),
+    .inst2_ssid_vld_i      (ssit_inst2ssidvld_r1),
+    .inst3_ssid_vld_i      (ssit_inst3ssidvld_r1),
     // update the LFST entry with a new dest register if the
-    // instruction is a store and it hit in the SSIT table the
-    // previous cycle
-    .update0_in            ({ssit_inst0ssid_r1,specrfl_inst0freereg_r1,(ssit_inst0ssidvld_r1 && decode_inst0memAcc_r1 && !decode_inst0writeRd_r1 ) }),
-    .update1_in            ({ssit_inst1ssid_r1,specrfl_inst1freereg_r1,(ssit_inst1ssidvld_r1 && decode_inst1memAcc_r1 && !decode_inst1writeRd_r1 ) }),
-    .update2_in            ({ssit_inst2ssid_r1,specrfl_inst2freereg_r1,(ssit_inst2ssidvld_r1 && decode_inst2memAcc_r1 && !decode_inst2writeRd_r1 ) }),
-    .update3_in            ({ssit_inst3ssid_r1,specrfl_inst3freereg_r1,(ssit_inst3ssidvld_r1 && decode_inst3memAcc_r1 && !decode_inst3writeRd_r1 ) }),
-    // invalidate the LSFT entry if the store is retiring               (and the
-    // mapping is still its own)
-    .invalidate0_in        (lfst_inv0_i),
-    .invalidate1_in        (lfst_inv1_i),
-    .lfs0_out              (lfs0_out),
-    .lfs1_out              (lfs1_out),
-    .lfs2_out              (lfs2_out),
-    .lfs3_out              (lfs3_out),
-    .valid0_out            (valid0_out),
-    .valid1_out            (valid1_out),
-    .valid2_out            (valid2_out),
-    .valid3_out            (valid3_out)
+    // instruction is a store and it hits in the SSIT table
+    .inst0_lfst_we_i            (ssit_inst0ssidvld_r1 & inst0_st_vld_r1),
+    .inst1_lfst_we_i            (ssit_inst1ssidvld_r1 & inst1_st_vld_r1),
+    .inst2_lfst_we_i            (ssit_inst2ssidvld_r1 & inst2_st_vld_r1),
+    .inst3_lfst_we_i            (ssit_inst3ssidvld_r1 & inst3_st_vld_r1),
+    .inst0_lfst_data_i          (specrfl_inst0freereg_r1),
+    .inst1_lfst_data_i          (specrfl_inst1freereg_r1),
+    .inst2_lfst_data_i          (specrfl_inst2freereg_r1),
+    .inst3_lfst_data_i          (specrfl_inst3freereg_r1),
+    .inst0_lfst_idx_i           (ssit_inst0ssid_r1),
+    .inst1_lfst_idx_i           (ssit_inst1ssid_r1),
+    .inst2_lfst_idx_i           (ssit_inst2ssid_r1),
+    .inst3_lfst_idx_i           (ssit_inst3ssid_r1),
+    // invalidate the LSFT entry if the store is retiring (and the mapping is still its own)
+    .inst0_lfst_invld_i         (retire_lfst_invld0_i),
+    .inst1_lfst_invld_i         (retire_lfst_invld1_i),
+    .inst0_lfst_invld_idx_i     (retire_lfst_invld_idx0_i),
+    .inst1_lfst_invld_idx_i     (retire_lfst_invld_idx1_i),
+    .inst0_lfs_o                (lfst_inst0lfs),
+    .inst1_lfs_o                (lfst_inst1lfs),
+    .inst2_lfs_o                (lfst_inst2lfs),
+    .inst3_lfs_o                (lfst_inst3lfs),
+    .inst0_lfs_vld_o            (lfst_inst0lfsvld),
+    .inst1_lfs_vld_o            (lfst_inst1lfsvld),
+    .inst2_lfs_vld_o            (lfst_inst2lfsvld),
+    .inst3_lfs_vld_o            (lfst_inst3lfsvld)
 );
 // perform the override for intra instruction bundle dependencies for
 // store set predictions
-assign lfs0_sel = lfs0_out;
+assign inst0_lfs     = lfst_inst0lfs;
+assign inst1_lfs     = depchkssit_inst1ssidsel_r1    ? lfst_inst1lfs           : specrfl_inst0freereg_r1;
+assign inst2_lfs     = depchkssit_inst2ssidsel_r1[1] ? 
+                      (depchkssit_inst2ssidsel_r1[0] ? lfst_inst3lfs           : lfst_inst2lfs):
+                      (depchkssit_inst2ssidsel_r1[0] ? specrfl_inst1freereg_r1 : specrfl_inst0freereg_r1);
+assign inst3_lfs     = depchkssit_inst3ssidsel_r1[1] ?
+                      (depchkssit_inst3ssidsel_r1[0] ? lfst_inst3lfs           : specrfl_inst2freereg_r1):
+                      (depchkssit_inst3ssidsel_r1[0] ? specrfl_inst1freereg_r1 : specrfl_inst0freereg_r1);
 
-assign lfs1_sel = depchkssit_inst1ssidsel_r1    ? lfs1_out                : specrfl_inst0freereg_r1;
-assign lfs2_sel = depchkssit_inst2ssidsel_r1[1] ? 
-                 (depchkssit_inst2ssidsel_r1[0] ? lfs3_out                : lfs2_out):
-                 (depchkssit_inst2ssidsel_r1[0] ? specrfl_inst1freereg_r1 : specrfl_inst0freereg_r1);
-assign lfs3_sel = depchkssit_inst3ssidsel_r1[1] ?
-                 (depchkssit_inst3ssidsel_r1[0] ? lfs3_out                : specrfl_inst2freereg_r1):
-                 (depchkssit_inst3ssidsel_r1[0] ? specrfl_inst1freereg_r1 : specrfl_inst0freereg_r1);
-
-// do the same thing for the valid bits.  if the same bundle isn't selected,
-// then we know that a store in the same bundle is predicted to alias
-assign lfs0_v = valid0_out;
-assign lfs1_v = depchkssit_inst1ssidsel_r1 ? valid1_out : 1'b1;
-assign lfs2_v = depchkssit_inst2ssidsel_r1[1] ? (depchkssit_inst2ssidsel_r1[0] ? 1'b1 : valid2_out) : 1'b1;
-assign lfs3_v = depchkssit_inst3ssidsel_r1[1] ? (depchkssit_inst3ssidsel_r1[0] ? valid3_out : 1'b1) : 1'b1;
+assign inst0_lfs_vld = lfst_inst0lfsvld;
+assign inst1_lfs_vld = depchkssit_inst1ssidsel_r1 ? lfst_inst1lfsvld : 1'b1;
+assign inst2_lfs_vld = depchkssit_inst2ssidsel_r1[1] ? (depchkssit_inst2ssidsel_r1[0] ? 1'b1 : lfst_inst2lfsvld) : 1'b1;
+assign inst3_lfs_vld = depchkssit_inst3ssidsel_r1[1] ? (depchkssit_inst3ssidsel_r1[0] ? lfst_inst3lfsvld : 1'b1) : 1'b1;
 
 // if a load is predicted to alias, place the aliasing store's destination
 // register into the srca field to order them
-assign inst0_rs1phys_r1_o = (decode_inst0memAcc_r1 && decode_inst0writeRd_r1 && lfs0_v && ssit_inst0ssidvld_r1 ) ? lfs0_sel : map_inst0_rs1phys;
-assign inst1_rs1phys_r1_o = (decode_inst1memAcc_r1 && decode_inst1writeRd_r1 && lfs1_v && ssit_inst1ssidvld_r1 ) ? lfs1_sel : map_inst1_rs1phys;
-assign inst2_rs1phys_r1_o = (decode_inst2memAcc_r1 && decode_inst2writeRd_r1 && lfs2_v && ssit_inst2ssidvld_r1 ) ? lfs2_sel : map_inst2_rs1phys;
-assign inst3_rs1phys_r1_o = (decode_inst3memAcc_r1 && decode_inst3writeRd_r1 && lfs3_v && ssit_inst3ssidvld_r1 ) ? lfs3_sel : map_inst3_rs1phys;
+assign rename_inst0rs1phys_r1_o = (inst0_ld_vld_r1 && inst0_lfs_vld && ssit_inst0ssidvld_r1 ) ? inst0_lfs : map_inst0_rs1phys;
+assign rename_inst1rs1phys_r1_o = (inst1_ld_vld_r1 && inst1_lfs_vld && ssit_inst1ssidvld_r1 ) ? inst1_lfs : map_inst1_rs1phys;
+assign rename_inst2rs1phys_r1_o = (inst2_ld_vld_r1 && inst2_lfs_vld && ssit_inst2ssidvld_r1 ) ? inst2_lfs : map_inst2_rs1phys;
+assign rename_inst3rs1phys_r1_o = (inst3_ld_vld_r1 && inst3_lfs_vld && ssit_inst3ssidvld_r1 ) ? inst3_lfs : map_inst3_rs1phys;
 
-assign inst0_rs2phys_r1_o = map_inst0_rs2phys;
-assign inst1_rs2phys_r1_o = map_inst1_rs2phys;
-assign inst2_rs2phys_r1_o = map_inst2_rs2phys;
-assign inst3_rs2phys_r1_o = map_inst3_rs2phys;
+assign rename_inst0rs2phys_r1_o = map_inst0_rs2phys;
+assign rename_inst1rs2phys_r1_o = map_inst1_rs2phys;
+assign rename_inst2rs2phys_r1_o = map_inst2_rs2phys;
+assign rename_inst3rs2phys_r1_o = map_inst3_rs2phys;
 
 // if the instruction doesn't write to its destination, when it
 // retires, free the register it was given (stores)
-assign inst0_oldrdphys_r1_o = !(decode_inst0memAcc_r1 && !decode_inst0writeRd_r1) ? map_inst0_rdphys : specrfl_inst0freereg_r1;
-assign inst1_oldrdphys_r1_o = !(decode_inst1memAcc_r1 && !decode_inst1writeRd_r1) ? map_inst1_rdphys : specrfl_inst1freereg_r1;
-assign inst2_oldrdphys_r1_o = !(decode_inst2memAcc_r1 && !decode_inst2writeRd_r1) ? map_inst2_rdphys : specrfl_inst2freereg_r1;
-assign inst3_oldrdphys_r1_o = !(decode_inst3memAcc_r1 && !decode_inst3writeRd_r1) ? map_inst3_rdphys : specrfl_inst3freereg_r1;
+assign rename_inst0oldrdphys_r1_o = inst0_st_vld_r1 ? specrfl_inst0freereg_r1 : map_inst0_rdphys;
+assign rename_inst1oldrdphys_r1_o = inst1_st_vld_r1 ? specrfl_inst1freereg_r1 : map_inst1_rdphys;
+assign rename_inst2oldrdphys_r1_o = inst2_st_vld_r1 ? specrfl_inst2freereg_r1 : map_inst2_rdphys;
+assign rename_inst3oldrdphys_r1_o = inst3_st_vld_r1 ? specrfl_inst3freereg_r1 : map_inst3_rdphys;
 
 endmodule
 

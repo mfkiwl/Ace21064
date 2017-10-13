@@ -4,14 +4,43 @@ module Ace21064(
 );
     wire [ 63:0] pcgen_pc_f0;
     wire [ 63:0] pcgen_pc_f1;
+    wire         pipe_stall;
     
     wire [255:0] icache_instalign
     wire         icache_stall;
+
+    wire [ 11:0] l1dcache_ssitidx1;
+    wire [ 11:0] l1dcache_ssitidx2;
+    wire         l1dcache_ssitwe;
+
     wire         retire_flush;
+    wire         retire_flush_r;
     wire [ 63:0] retire_flush_pc;
     wire         retire_brcond_vld;
     wire         retire_brindir_vld;
     wire         retire_brdir;
+    wire         retire_lfst_invld0;
+    wire         retire_lfst_invld1;
+    wire [  6:0] retire_lfst_invld_idx0;
+    wire [  6:0] retire_lfst_invld_idx1;
+    wire [223:0] retire_archrat_data;
+    wire [335:0] retire_archrfl_data;
+    wire [  6:0] retire_freereg0;
+    wire [  6:0] retire_freereg1;
+    wire [  6:0] retire_freereg2;
+    wire [  6:0] retire_freereg3;
+    wire [  6:0] retire_freereg4;
+    wire [  6:0] retire_freereg5;
+    wire [  6:0] retire_freereg6;
+    wire [  6:0] retire_freereg7;
+    wire         retire_freereg0_vld;
+    wire         retire_freereg1_vld;
+    wire         retire_freereg2_vld;
+    wire         retire_freereg3_vld;
+    wire         retire_freereg4_vld;
+    wire         retire_freereg5_vld;
+    wire         retire_freereg6_vld;
+    wire         retire_freereg7_vld;
     wire [ 63:0] fetch_override_pc_f1;
     wire         fetch_override_vld_f1
     wire [ 63:0] fetch_nxt_pc_f0;
@@ -89,6 +118,20 @@ module Ace21064(
     wire         decode_inst3_memacc;
     wire         decode_instbuf_full;
     wire         decode_instbuf_empty;
+    wire         rename_specrfl_stall;
+    wire [  6:0] rename_inst0rs1phys_r1;
+    wire [  6:0] rename_inst1rs1phys_r1;
+    wire [  6:0] rename_inst2rs1phys_r1;
+    wire [  6:0] rename_inst3rs1phys_r1;
+    wire [  6:0] rename_inst0rs2phys_r1;
+    wire [  6:0] rename_inst1rs2phys_r1;
+    wire [  6:0] rename_inst2rs2phys_r1;
+    wire [  6:0] rename_inst3rs2phys_r1;
+    wire [  6:0] rename_inst0oldrdphys_r1;
+    wire [  6:0] rename_inst1oldrdphys_r1;
+    wire [  6:0] rename_inst2oldrdphys_r1;
+    wire [  6:0] rename_inst3oldrdphys_r1;
+
 
 
 ace_fetch i_ace_fetch(
@@ -206,6 +249,81 @@ ace_decode i_ace_decode(
     .inst3_memacc_o          (decode_inst3_memacc),
     .instbuf_full_o          (decode_instbuf_full          ),
     .instbuf_empty_o         (decode_instbuf_empty         )
+);
+
+
+ace_rename i_ace_rename(
+    .clock                   (clock),
+    .reset_n                 (reset_n),
+    .pc_r0_i                 (pcgen_pc_r0),
+    .decode_inst0rs1_i          (decode_inst0_rs1    ),
+    .decode_inst1rs1_i          (decode_inst1_rs1    ),
+    .decode_inst2rs1_i          (decode_inst2_rs1    ),
+    .decode_inst3rs1_i          (decode_inst3_rs1    ),
+    .decode_inst0rs2_i          (decode_inst0_rs2    ),
+    .decode_inst1rs2_i          (decode_inst1_rs2    ),
+    .decode_inst2rs2_i          (decode_inst2_rs2    ),
+    .decode_inst3rs2_i          (decode_inst3_rs2    ),
+    .decode_inst0rd_i           (decode_inst0_rd     ),
+    .decode_inst1rd_i           (decode_inst1_rd     ),
+    .decode_inst2rd_i           (decode_inst2_rd     ),
+    .decode_inst3rd_i           (decode_inst3_rd     ),
+    .decode_inst0writeRd_i      (decode_inst0_write_rd),
+    .decode_inst1writeRd_i      (decode_inst1_write_rd),
+    .decode_inst2writeRd_i      (decode_inst2_write_rd),
+    .decode_inst3writeRd_i      (decode_inst3_write_rd),
+    .decode_inst0useRd_i        (decode_inst0_use_rd  ),
+    .decode_inst1useRd_i        (decode_inst1_use_rd  ),
+    .decode_inst2useRd_i        (decode_inst2_use_rd  ),
+    .decode_inst3useRd_i        (decode_inst3_use_rd  ),
+    .decode_inst0memacc_i       (decode_inst0_memacc  ),
+    .decode_inst1memacc_i       (decode_inst1_memacc  ),
+    .decode_inst2memacc_i       (decode_inst2_memacc  ),
+    .decode_inst3memacc_i       (decode_inst3_memacc  ),
+ 
+    .retire_lfst_invld0_i       (retire_lfst_invld0    ),
+    .retire_lfst_invld1_i       (retire_lfst_invld1    ),
+    .retire_lfst_invld_idx0_i   (retire_lfst_invld_idx0),
+    .retire_lfst_invld_idx1_i   (retire_lfst_invld_idx1),
+    .retire_flush_i             (retire_flush          ),
+    .retire_flush_r_i           (retire_flush_r        ),
+    .pipe_stall_i               (pipe_stall            ),
+
+    .retire_archrat_data_i      (retire_archrat_data  ),
+    .retire_archrfl_data_i      (retire_archrfl_data  ),
+    .retire_freereg0_i          (retire_freereg0      ),
+    .retire_freereg1_i          (retire_freereg1      ),
+    .retire_freereg2_i          (retire_freereg2      ),
+    .retire_freereg3_i          (retire_freereg3      ),
+    .retire_freereg4_i          (retire_freereg4      ),
+    .retire_freereg5_i          (retire_freereg5      ),
+    .retire_freereg6_i          (retire_freereg6      ),
+    .retire_freereg7_i          (retire_freereg7      ),
+    .retire_freereg0_vld_i      (retire_freereg0_vld  ),
+    .retire_freereg1_vld_i      (retire_freereg1_vld  ),
+    .retire_freereg2_vld_i      (retire_freereg2_vld  ),
+    .retire_freereg3_vld_i      (retire_freereg3_vld  ),
+    .retire_freereg4_vld_i      (retire_freereg4_vld  ),
+    .retire_freereg5_vld_i      (retire_freereg5_vld  ),
+    .retire_freereg6_vld_i      (retire_freereg6_vld  ),
+    .retire_freereg7_vld_i      (retire_freereg7_vld  ),
+    .l1dcache_ssitidx1_i        (l1dcache_ssitidx1    ),
+    .l1dcache_ssitidx2_i        (l1dcache_ssitidx2    ),
+    .l1dcache_ssitwe_i          (l1dcache_ssitwe      ),
+
+    .rename_specrfl_stall_o     (rename_specrfl_stall    ),
+    .rename_inst0rs1phys_r1_o   (rename_inst0rs1phys_r1  ),
+    .rename_inst1rs1phys_r1_o   (rename_inst1rs1phys_r1  ),
+    .rename_inst2rs1phys_r1_o   (rename_inst2rs1phys_r1  ),
+    .rename_inst3rs1phys_r1_o   (rename_inst3rs1phys_r1  ),
+    .rename_inst0rs2phys_r1_o   (rename_inst0rs2phys_r1  ),
+    .rename_inst1rs2phys_r1_o   (rename_inst1rs2phys_r1  ),
+    .rename_inst2rs2phys_r1_o   (rename_inst2rs2phys_r1  ),
+    .rename_inst3rs2phys_r1_o   (rename_inst3rs2phys_r1  ),
+    .rename_inst0oldrdphys_r1_o (rename_inst0oldrdphys_r1),
+    .rename_inst1oldrdphys_r1_o (rename_inst1oldrdphys_r1),
+    .rename_inst2oldrdphys_r1_o (rename_inst2oldrdphys_r1),
+    .rename_inst3oldrdphys_r1_o (rename_inst3oldrdphys_r1)
 );
 
 endmodule
