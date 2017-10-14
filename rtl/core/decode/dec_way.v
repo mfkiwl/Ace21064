@@ -13,20 +13,28 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 
 module dec_way(
+    input  wire             clock,
+    input  wire             reset_n,
+    input  wire             pipe_load_decode_i
+
     input  wire [31:0]      inst_i,
 
-    output wire [4:0]       rs1_o,
-    output wire [4:0]       rs2_o,
-    output wire [4:0]       rd_o,
-    output reg  [1:0]       imm_type_o,
-    output reg  [1:0]       src_a_sel_o,// select alu operands
-    output reg  [1:0]       src_b_sel_o,
+    output wire [4:0]       rs1_r0_o,
+    output wire [4:0]       rs2_r0_o,
+    output wire [4:0]       rd_r0_o,
+    output reg  [1:0]       imm_type_r0_o,
+    output reg  [1:0]       src_a_sel_r0_o,// select alu operands
+    output reg  [1:0]       src_b_sel_r0_o,
     
-    output reg              use_rs1_o,
-    output reg              use_rs2_o,
-    output reg              use_rd_o,
-    output reg              write_rd_o,
-    output reg              memory_inst_o,
+    output reg              use_rs1_r0_o,
+    output reg              use_rs2_r0_o,
+    output reg              use_rd_r0_o,
+    output reg              write_rd_r0_o,
+    output reg              memory_inst_r0_o,
+    output reg [3:0]        alu_op_r0_o,
+    output reg              rs_id_r0_o,             // reservation station id
+    output reg              illegal_inst_r0_o
+
     // branch_inst
     // simple_alu
     // complex_alu
@@ -35,9 +43,6 @@ module dec_way(
     // uncond_br
     // indirect_br
 
-    output reg [3:0]        alu_op_o,
-    output reg              rs_id_o,             // reservation station id
-    output reg              illegal_inst_o
 );
 
    wire [ 6:0]              opcode;
@@ -272,5 +277,46 @@ module dec_way(
                                   end
        endcase
    end
+
+  always @ (posedge clock or negedge reset_n)
+  begin
+      if(!reset_n)
+      begin
+          rs1_r0_o          <= 5'b0;
+          rs2_r0_o          <= 5'b0;
+          rd_r0_o           <= 5'b0;
+          imm_type_r0_o     <= 2'b0;
+          src_a_sel_r0_o    <= 2'b0;
+          src_b_sel_r0_o    <= 2'b0;
+                                    
+          use_rs1_r0_o      <= 1'b0;
+          use_rs2_r0_o      <= 1'b0;
+          use_rd_r0_o       <= 1'b0;
+          write_rd_r0_o     <= 1'b0;
+          memory_inst_r0_o  <= 1'b0;
+          alu_op_r0_o       <= 4'b0;
+          rs_id_r0_o        <= 1'b0;
+          illegal_inst_r0_o <= 1'b0;
+      end
+      else if(pipe_load_decode_i)
+      begin
+          rs1_r0_o          <= rs1_o;
+          rs2_r0_o          <= rs2_o;
+          rd_r0_o           <= rd_o;
+          imm_type_r0_o     <= imm_type_o;
+          src_a_sel_r0_o    <= src_a_sel_o;
+          src_b_sel_r0_o    <= src_b_sel_o;
+          
+          use_rs1_r0_o      <= use_rs1_o;
+          use_rs2_r0_o      <= use_rs2_o;
+          use_rd_r0_o       <= use_rd_o;
+          write_rd_r0_o     <= write_rd_o;
+          memory_inst_r0_o  <= memory_inst_o;
+          alu_op_r0_o       <= alu_op_o;
+          rs_id_r0_o        <= rs_id_o;
+          illegal_inst_r0_o <= illegal_inst_o;
+      end
+  end
+
 
 endmodule

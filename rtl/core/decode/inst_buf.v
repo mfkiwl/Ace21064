@@ -16,6 +16,7 @@ module inst_buf(
   input	 wire         clock,
   input	 wire         reset_n,
   input	 wire         flush_i,
+  input  wire         pipe_load_decode_i,
   input  wire [31:0]  inst0_i,
   input  wire [31:0]  inst1_i,
   input  wire [31:0]  inst2_i,
@@ -33,10 +34,10 @@ module inst_buf(
   input  wire         inst6_vld_i,
   input  wire         inst7_vld_i,
   // outputs
-  output wire [31:0]  buf_inst0_o,
-  output wire [31:0]  buf_inst1_o,
-  output wire [31:0]  buf_inst2_o,
-  output wire [31:0]  buf_inst3_o,
+  output wire [31:0]  buf_inst0_r_o,
+  output wire [31:0]  buf_inst1_r_o,
+  output wire [31:0]  buf_inst2_r_o,
+  output wire [31:0]  buf_inst3_r_o,
   output wire         buf_full_o,
   output wire         buf_empty_o
 );
@@ -53,8 +54,13 @@ module inst_buf(
   wire [ 7:0] vld_inst_array;
   wire [ 5:0] output_inst_num;
 
-  // valid instruction in current instruction bundle.
-  assign vld_inst_array ={inst7_vld_i,inst6_vld_i,inst5_vld_i,inst4_vld_i,
+  wire [31:0] buf_inst0_o;
+  wire [31:0] buf_inst1_o;
+  wire [31:0] buf_inst2_o;
+  wire [31:0] buf_inst3_o;
+                        
+  // valid inbuf_full_o struction in current instruction bundle.
+  assign vld_buf_empty_oinst_array ={inst7_vld_i,inst6_vld_i,inst5_vld_i,inst4_vld_i,
                           inst3_vld_i,inst2_vld_i,inst1_vld_i,inst0_vld_i};
 
   // total ouput instruction number in current cycle.
@@ -143,8 +149,26 @@ module inst_buf(
   assign buf_inst2_o = (4 <= buffer_inst_num) ?  buf_entry[nxt_ptr(2,read_ptr)] : 32'h0;
   assign buf_inst3_o = (4 <= buffer_inst_num) ?  buf_entry[nxt_ptr(3,read_ptr)] : 32'h0;
 
-  assign buf_full_o = (buffer_inst_num < 24) ? 1'b0 : 1'b1; // less than entry entry empty
-  assign buf_empty_o= (buffer_inst_num == 0) ? 1'b1 : 1'b0;
+  assign buf_full_o  = (buffer_inst_num < 24) ? 1'b0 : 1'b1; // less than entry entry empty
+  assign buf_empty_o = (buffer_inst_num == 0) ? 1'b1 : 1'b0;
+  // pipe register between instruction buffer and decode
+  always @ (posedge clock or negedge reset_n)
+  begin
+      if(!reset_n)
+      begin
+          buf_inst0_r_o <= 32'b0;
+          buf_inst1_r_o <= 32'b0;
+          buf_inst2_r_o <= 32'b0;
+          buf_inst3_r_o <= 32'b0;
+      end
+      else if(pipe_load_decode_i) 
+      begin
+          buf_inst0_r_o <= buf_inst0_o;
+          buf_inst1_r_o <= buf_inst1_o;
+          buf_inst2_r_o <= buf_inst2_o;
+          buf_inst3_r_o <= buf_inst3_o;
+      end
+  end
   ////////////////////////////////////////////////////////////////////
   // Functions used in current module
   //

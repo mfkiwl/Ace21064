@@ -47,6 +47,7 @@ module ace_rename(
     input wire        retire_flush_i,
     input wire        retire_flush_r_i,
     input wire        pipe_stall_i,
+    input wire        pipe_load_rename_i,
 
     input wire [223:0] retire_archrat_data_i, //32*7
     input wire [335:0] retire_archrfl_data_i, //(80-32)*7
@@ -71,18 +72,18 @@ module ace_rename(
     input wire        l1dcache_ssitwe_i,
 
     output wire        rename_specrfl_stall_o,
-    output wire  [6:0] rename_inst0rs1phys_r1_o,
-    output wire  [6:0] rename_inst1rs1phys_r1_o,
-    output wire  [6:0] rename_inst2rs1phys_r1_o,
-    output wire  [6:0] rename_inst3rs1phys_r1_o,
-    output wire  [6:0] rename_inst0rs2phys_r1_o,
-    output wire  [6:0] rename_inst1rs2phys_r1_o,
-    output wire  [6:0] rename_inst2rs2phys_r1_o,
-    output wire  [6:0] rename_inst3rs2phys_r1_o,
-    output wire  [6:0] rename_inst0oldrdphys_r1_o,
-    output wire  [6:0] rename_inst1oldrdphys_r1_o,
-    output wire  [6:0] rename_inst2oldrdphys_r1_o,
-    output wire  [6:0] rename_inst3oldrdphys_r1_o
+    output wire  [6:0] rename_inst0rs1phys_i0_o,
+    output wire  [6:0] rename_inst1rs1phys_i0_o,
+    output wire  [6:0] rename_inst2rs1phys_i0_o,
+    output wire  [6:0] rename_inst3rs1phys_i0_o,
+    output wire  [6:0] rename_inst0rs2phys_i0_o,
+    output wire  [6:0] rename_inst1rs2phys_i0_o,
+    output wire  [6:0] rename_inst2rs2phys_i0_o,
+    output wire  [6:0] rename_inst3rs2phys_i0_o,
+    output wire  [6:0] rename_inst0rdphys_i0_o,
+    output wire  [6:0] rename_inst1rdphys_i0_o,
+    output wire  [6:0] rename_inst2rdphys_i0_o,
+    output wire  [6:0] rename_inst3rdphys_i0_o
 
 );
 
@@ -214,6 +215,15 @@ module ace_rename(
     reg            decode_inst2memAcc_r1;
     reg            decode_inst3memAcc_r1;
 
+    reg            inst0_st_vld_r1;
+    reg            inst1_st_vld_r1;
+    reg            inst2_st_vld_r1;
+    reg            inst3_st_vld_r1;
+    reg            inst0_ld_vld_r1;
+    reg            inst1_ld_vld_r1;
+    reg            inst2_ld_vld_r1;
+    reg            inst3_ld_vld_r1;
+
     wire inst0_st_vld = !decode_inst0writeRd_i & decode_inst0memacc_i;
     wire inst1_st_vld = !decode_inst1writeRd_i & decode_inst1memacc_i;
     wire inst2_st_vld = !decode_inst2writeRd_i & decode_inst2memacc_i;
@@ -222,6 +232,19 @@ module ace_rename(
     wire inst1_ld_vld =  decode_inst1writeRd_i & decode_inst1memacc_i;
     wire inst2_ld_vld =  decode_inst2writeRd_i & decode_inst2memacc_i;
     wire inst3_ld_vld =  decode_inst3writeRd_i & decode_inst3memacc_i;
+
+    wire [6:0] rename_inst0rs1phys_r1;
+    wire [6:0] rename_inst1rs1phys_r1;
+    wire [6:0] rename_inst2rs1phys_r1;
+    wire [6:0] rename_inst3rs1phys_r1;
+    wire [6:0] rename_inst0rs2phys_r1;
+    wire [6:0] rename_inst1rs2phys_r1;
+    wire [6:0] rename_inst2rs2phys_r1;
+    wire [6:0] rename_inst3rs2phys_r1;
+    wire [6:0] rename_inst0oldrdphys_r1;
+    wire [6:0] rename_inst1oldrdphys_r1;
+    wire [6:0] rename_inst2oldrdphys_r1;
+    wire [6:0] rename_inst3oldrdphys_r1;
 
 
 
@@ -421,7 +444,7 @@ begin
         depchkssit_inst2ssidsel_r1<= 2'b0;
         depchkssit_inst3ssidsel_r1<= 2'b0;
     end
-    else if(load)
+    else if(pipe_load_rename_i)
     begin
         depchk_inst0rdsel_r1      <= depchk_inst0_rdsel;
         depchk_inst1rdsel_r1      <= depchk_inst1_rdsel;
@@ -479,7 +502,7 @@ begin
         inst2_ld_vld_r1 <= 1'b0;
         inst3_ld_vld_r1 <= 1'b0;
     end
-    else if(load)
+    else if(pipe_load_rename_i)
     begin
         inst0_st_vld_r1 <= inst0_st_vld;
         inst1_st_vld_r1 <= inst1_st_vld;
@@ -594,22 +617,57 @@ assign inst3_lfs_vld = depchkssit_inst3ssidsel_r1[1] ? (depchkssit_inst3ssidsel_
 
 // if a load is predicted to alias, place the aliasing store's destination
 // register into the srca field to order them
-assign rename_inst0rs1phys_r1_o = (inst0_ld_vld_r1 && inst0_lfs_vld && ssit_inst0ssidvld_r1 ) ? inst0_lfs : map_inst0_rs1phys;
-assign rename_inst1rs1phys_r1_o = (inst1_ld_vld_r1 && inst1_lfs_vld && ssit_inst1ssidvld_r1 ) ? inst1_lfs : map_inst1_rs1phys;
-assign rename_inst2rs1phys_r1_o = (inst2_ld_vld_r1 && inst2_lfs_vld && ssit_inst2ssidvld_r1 ) ? inst2_lfs : map_inst2_rs1phys;
-assign rename_inst3rs1phys_r1_o = (inst3_ld_vld_r1 && inst3_lfs_vld && ssit_inst3ssidvld_r1 ) ? inst3_lfs : map_inst3_rs1phys;
+assign rename_inst0rs1phys_r1 = (inst0_ld_vld_r1 && inst0_lfs_vld && ssit_inst0ssidvld_r1 ) ? inst0_lfs : map_inst0_rs1phys;
+assign rename_inst1rs1phys_r1 = (inst1_ld_vld_r1 && inst1_lfs_vld && ssit_inst1ssidvld_r1 ) ? inst1_lfs : map_inst1_rs1phys;
+assign rename_inst2rs1phys_r1 = (inst2_ld_vld_r1 && inst2_lfs_vld && ssit_inst2ssidvld_r1 ) ? inst2_lfs : map_inst2_rs1phys;
+assign rename_inst3rs1phys_r1 = (inst3_ld_vld_r1 && inst3_lfs_vld && ssit_inst3ssidvld_r1 ) ? inst3_lfs : map_inst3_rs1phys;
 
-assign rename_inst0rs2phys_r1_o = map_inst0_rs2phys;
-assign rename_inst1rs2phys_r1_o = map_inst1_rs2phys;
-assign rename_inst2rs2phys_r1_o = map_inst2_rs2phys;
-assign rename_inst3rs2phys_r1_o = map_inst3_rs2phys;
+assign rename_inst0rs2phys_r1 = map_inst0_rs2phys;
+assign rename_inst1rs2phys_r1 = map_inst1_rs2phys;
+assign rename_inst2rs2phys_r1 = map_inst2_rs2phys;
+assign rename_inst3rs2phys_r1 = map_inst3_rs2phys;
 
 // if the instruction doesn't write to its destination, when it
 // retires, free the register it was given (stores)
-assign rename_inst0oldrdphys_r1_o = inst0_st_vld_r1 ? specrfl_inst0freereg_r1 : map_inst0_rdphys;
-assign rename_inst1oldrdphys_r1_o = inst1_st_vld_r1 ? specrfl_inst1freereg_r1 : map_inst1_rdphys;
-assign rename_inst2oldrdphys_r1_o = inst2_st_vld_r1 ? specrfl_inst2freereg_r1 : map_inst2_rdphys;
-assign rename_inst3oldrdphys_r1_o = inst3_st_vld_r1 ? specrfl_inst3freereg_r1 : map_inst3_rdphys;
+assign rename_inst0oldrdphys_r1 = inst0_st_vld_r1 ? specrfl_inst0freereg_r1 : map_inst0_rdphys;
+assign rename_inst1oldrdphys_r1 = inst1_st_vld_r1 ? specrfl_inst1freereg_r1 : map_inst1_rdphys;
+assign rename_inst2oldrdphys_r1 = inst2_st_vld_r1 ? specrfl_inst2freereg_r1 : map_inst2_rdphys;
+assign rename_inst3oldrdphys_r1 = inst3_st_vld_r1 ? specrfl_inst3freereg_r1 : map_inst3_rdphys;
+
+// pipe stage registers
+always @ (posedge clock or negedge reset_n)
+begin
+    if(!reset_n)
+    begin
+        rename_inst0rs1phys_i0_o <= 'b0;
+        rename_inst1rs1phys_i0_o <= 'b0;
+        rename_inst2rs1phys_i0_o <= 'b0;
+        rename_inst3rs1phys_i0_o <= 'b0;
+        rename_inst0rs2phys_i0_o <= 'b0;
+        rename_inst1rs2phys_i0_o <= 'b0;
+        rename_inst2rs2phys_i0_o <= 'b0;
+        rename_inst3rs2phys_i0_o <= 'b0;
+        rename_inst0rdphys_i0_o  <= 'b0;
+        rename_inst1rdphys_i0_o  <= 'b0;
+        rename_inst2rdphys_i0_o  <= 'b0;
+        rename_inst3rdphys_i0_o  <= 'b0;
+    end
+    else if(pipe_load_rename_i)
+    begin
+        rename_inst0rs1phys_i0_o <= rename_inst0rs1phys_r1;
+        rename_inst1rs1phys_i0_o <= rename_inst1rs1phys_r1;
+        rename_inst2rs1phys_i0_o <= rename_inst2rs1phys_r1;
+        rename_inst3rs1phys_i0_o <= rename_inst3rs1phys_r1;
+        rename_inst0rs2phys_i0_o <= rename_inst0rs2phys_r1;
+        rename_inst1rs2phys_i0_o <= rename_inst1rs2phys_r1;
+        rename_inst2rs2phys_i0_o <= rename_inst2rs2phys_r1;
+        rename_inst3rs2phys_i0_o <= rename_inst3rs2phys_r1;
+        rename_inst0rdphys_i0_o  <= rename_inst0oldrdphys_r1;
+        rename_inst1rdphys_i0_o  <= rename_inst1oldrdphys_r1;
+        rename_inst2rdphys_i0_o  <= rename_inst2oldrdphys_r1;
+        rename_inst3rdphys_i0_o  <= rename_inst3oldrdphys_r1;
+    end
+end
 
 endmodule
 
