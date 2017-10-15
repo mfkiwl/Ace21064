@@ -39,61 +39,69 @@ module ace_decode (
     output wire [4:0]   inst0_rs2_r0_o,
     output wire [4:0]   inst0_rd_r0_o,
     output wire [1:0]   inst0_imm_type_r0_o,
-    output wire [1:0]   inst0_src_a_sel_r0_o,// select alu operands
-    output wire [1:0]   inst0_src_b_sel_r0_o,
+    output wire [1:0]   inst0_src1_sel_r0_o,// select alu operands
+    output wire [1:0]   inst0_src2_sel_r0_o,
     output wire         inst0_use_rs1_r0_o,
     output wire         inst0_use_rs2_r0_o,
     output wire         inst0_use_rd_r0_o,
     output wire         inst0_write_rd_r0_o,
     output wire [3:0]   inst0_alu_op_r0_o,
-    output wire         inst0_rs_id_r0_o,    // reservation station id
     output wire         inst0_illegal_r0_o,
-    output wire         inst0_memacc_r0_o,
+    output wire         inst0_memory_r0_o,
+    output wire         inst0_branch_r0_o,
+    output wire         inst0_simple_r0_o,
+    output wire         inst0_complx_r0_o,
 
     output wire [4:0]   inst1_rs1_r0_o,
     output wire [4:0]   inst1_rs2_r0_o,
     output wire [4:0]   inst1_rd_r0_o,
     output wire [1:0]   inst1_imm_type_r0_o,
-    output wire [1:0]   inst1_src_a_sel_r0_o,// select alu operands
-    output wire [1:0]   inst1_src_b_sel_r0_o,
+    output wire [1:0]   inst1_src1_sel_r0_o,// select alu operands
+    output wire [1:0]   inst1_src2_sel_r0_o,
     output wire         inst1_use_rs1_r0_o,
     output wire         inst1_use_rs2_r0_o,
     output wire         inst1_use_rd_r0_o,
     output wire         inst1_write_rd_r0_o,
     output wire [3:0]   inst1_alu_op_r0_o,
-    output wire         inst1_rs_id_r0_o,    // reservation station id
     output wire         inst1_illegal_r0_o,
-    output wire         inst1_memacc_r0_o,
+    output wire         inst1_memory_r0_o,
+    output wire         inst1_branch_r0_o,
+    output wire         inst1_simple_r0_o,
+    output wire         inst1_complx_r0_o,
 
     output wire [4:0]   inst2_rs1_r0_o,
     output wire [4:0]   inst2_rs2_r0_o,
     output wire [4:0]   inst2_rd_r0_o,
     output wire [1:0]   inst2_imm_type_r0_o,
-    output wire [1:0]   inst2_src_a_sel_r0_o,// select alu operands
-    output wire [1:0]   inst2_src_b_sel_r0_o,
+    output wire [1:0]   inst2_src1_sel_r0_o,// select alu operands
+    output wire [1:0]   inst2_src2_sel_r0_o,
     output wire         inst2_use_rs1_r0_o,
     output wire         inst2_use_rs2_r0_o,
     output wire         inst2_use_rd_r0_o,
     output wire         inst2_write_rd_r0_o,
     output wire [3:0]   inst2_alu_op_r0_o,
-    output wire         inst2_rs_id_r0_o,    // reservation station id
     output wire         inst2_illegal_r0_o,
-    output wire         inst2_memacc_r0_o,
+    output wire         inst2_memory_r0_o,
+    output wire         inst2_branch_r0_o,
+    output wire         inst2_simple_r0_o,
+    output wire         inst2_complx_r0_o,
 
     output wire [4:0]   inst3_rs1_r0_o,
     output wire [4:0]   inst3_rs2_r0_o,
     output wire [4:0]   inst3_rd_r0_o,
     output wire [1:0]   inst3_imm_type_r0_o,
-    output wire [1:0]   inst3_src_a_sel_r0_o,// select alu operands
-    output wire [1:0]   inst3_src_b_sel_r0_o,
+    output wire [1:0]   inst3_src1_sel_r0_o,// select alu operands
+    output wire [1:0]   inst3_src2_sel_r0_o,
     output wire         inst3_use_rs1_r0_o,
     output wire         inst3_use_rs2_r0_o,
     output wire         inst3_use_rd_r0_o,
     output wire         inst3_write_rd_r0_o,
     output wire [3:0]   inst3_alu_op_r0_o,
-    output wire         inst3_rs_id_r0_o,    // reservation station id
     output wire         inst3_illegal_r0_o,
-    output wire         inst3_memacc_r0_o,
+    output wire         inst3_memory_r0_o,
+    output wire         inst3_branch_r0_o,
+    output wire         inst3_simple_r0_o,
+    output wire         inst3_complx_r0_o,
 
     output wire         instbuf_full_d0_o,
     output wire         instbuf_empty_d0_o
@@ -141,16 +149,18 @@ dec_way decoder_way0(
     .rs2_r0_o               (inst0_rs2_r0_o        ),
     .rd_r0_o                (inst0_rd_r0_o         ),
     .imm_type_r0_o          (inst0_imm_type_r0_o   ),
-    .src_a_sel_r0_o         (inst0_src_a_sel_r0_o  ),
-    .src_b_sel_r0_o         (inst0_src_b_sel_r0_o  ),
+    .src1_sel_r0_o         (inst0_src1_sel_r0_o  ),
+    .src2_sel_r0_o         (inst0_src2_sel_r0_o  ),
     .use_rs1_r0_o           (inst0_use_rs1_r0_o    ),
     .use_rs2_r0_o           (inst0_use_rs2_r0_o    ),
     .use_rd_r0_o            (inst0_use_rd_r0_o     ),
     .write_rd_r0_o          (inst0_write_rd_r0_o   ),
     .alu_op_r0_o            (inst0_alu_op_r0_o     ),
-    .rs_id_r0_o             (inst0_rs_id_r0_o      ),
     .illegal_inst_r0_o      (inst0_illegal_r0_o    ),
-    .memory_inst_r0_o       (inst0_memacc_r0_o     )
+    .memory_inst_r0_o       (inst0_memory_r0_o     ),
+    .branch_inst_r0_o       (inst0_branch_r0_o     ),
+    .simple_inst_r0_o       (inst0_simple_r0_o     ),
+    .complx_inst_r0_o       (inst0_complx_r0_o     )
 );
 
 dec_way decoder_way1(
@@ -159,16 +169,18 @@ dec_way decoder_way1(
     .rs2_r0_o               (inst1_rs2_r0_o      ),
     .rd_r0_o                (inst1_rd_r0_o       ),
     .imm_type_r0_o          (inst1_imm_type_r0_o ),
-    .src_a_sel_r0_o         (inst1_src_a_sel_r0_o),
-    .src_b_sel_r0_o         (inst1_src_b_sel_r0_o),
+    .src1_sel_r0_o         (inst1_src1_sel_r0_o),
+    .src2_sel_r0_o         (inst1_src2_sel_r0_o),
     .use_rs1_r0_o           (inst1_use_rs1_r0_o  ),
     .use_rs2_r0_o           (inst1_use_rs2_r0_o  ),
     .use_rd_r0_o            (inst1_use_rd_r0_o ),
     .write_rd_r0_o          (inst1_write_rd_r0_o ),
     .alu_op_r0_o            (inst1_alu_op_r0_o  ),
-    .rs_id_r0_o             (inst1_rs_id_r0_o   ),
     .illegal_inst_r0_o      (inst1_illegal_r0_o ),
-    .memory_inst_r0_o       (inst1_memacc_r0_o )
+    .memory_inst_r0_o       (inst1_memory_r0_o     ),
+    .branch_inst_r0_o       (inst1_branch_r0_o     ),
+    .simple_inst_r0_o       (inst1_simple_r0_o     ),
+    .complx_inst_r0_o       (inst1_complx_r0_o     )
 );
 
 dec_way decoder_way2(
@@ -177,16 +189,18 @@ dec_way decoder_way2(
     .rs2_r0_o               (inst2_rs2_r0_o        ),
     .rd_r0_o                (inst2_rd_r0_o         ),
     .imm_type_r0_o          (inst2_imm_type_r0_o   ),
-    .src_a_sel_r0_o         (inst2_src_a_sel_r0_o  ),
-    .src_b_sel_r0_o         (inst2_src_b_sel_r0_o  ),
+    .src1_sel_r0_o         (inst2_src1_sel_r0_o  ),
+    .src2_sel_r0_o         (inst2_src2_sel_r0_o  ),
     .use_rs1_r0_o           (inst2_use_rs1_r0_o    ),
     .use_rs2_r0_o           (inst2_use_rs2_r0_o    ),
     .use_rd_r0_o            (inst2_use_rd_r0_o ),
     .write_rd_r0_o          (inst2_write_rd_r0_o ),
     .alu_op_r0_o            (inst2_alu_op_r0_o  ),
-    .rs_id_r0_o             (inst2_rs_id_r0_o   ),
     .illegal_inst_r0_o      (inst2_illegal_r0_o ),
-    .memory_inst_r0_o       (inst2_memacc_r0_o )
+    .memory_inst_r0_o       (inst2_memory_r0_o     ),
+    .branch_inst_r0_o       (inst2_branch_r0_o     ),
+    .simple_inst_r0_o       (inst2_simple_r0_o     ),
+    .complx_inst_r0_o       (inst2_complx_r0_o     )
 );
 
 dec_way decoder_way3(
@@ -195,16 +209,18 @@ dec_way decoder_way3(
     .rs2_r0_o               (inst3_rs2_r0_o        ),
     .rd_r0_o                (inst3_rd_r0_o         ),
     .imm_type_r0_o          (inst3_imm_type_r0_o   ),
-    .src_a_sel_r0_o         (inst3_src_a_sel_r0_o  ),
-    .src_b_sel_r0_o         (inst3_src_b_sel_r0_o  ),
+    .src1_sel_r0_o         (inst3_src1_sel_r0_o  ),
+    .src2_sel_r0_o         (inst3_src2_sel_r0_o  ),
     .use_rs1_r0_o           (inst3_use_rs1_r0_o    ),
     .use_rs2_r0_o           (inst3_use_rs2_r0_o    ),
     .use_rd_r0_o            (inst3_use_rd_r0_o ),
     .write_rd_r0_o          (inst3_write_rd_r0_o ),
     .alu_op_r0_o            (inst3_alu_op_r0_o  ),
-    .rs_id_r0_o             (inst3_rs_id_r0_o   ),
     .illegal_inst_r0_o      (inst3_illegal_r0_o ),
-    .memory_inst_r0_o       (inst3_memacc_r0_o )
+    .memory_inst_r0_o       (inst3_memory_r0_o     ),
+    .branch_inst_r0_o       (inst3_branch_r0_o     ),
+    .simple_inst_r0_o       (inst3_simple_r0_o     ),
+    .complx_inst_r0_o       (inst3_complx_r0_o     )
 );
 
 endmodule

@@ -80,58 +80,66 @@ module Ace21064_top(
     wire [  4:0] decode_inst0_rs2_r0;
     wire [  4:0] decode_inst0_rd_r0;
     wire [  1:0] decode_inst0_imm_type_r0;
-    wire [  1:0] decode_inst0_src_a_sel_r0;
-    wire [  1:0] decode_inst0_src_b_sel_r0;
+    wire [  1:0] decode_inst0_src1_sel_r0;
+    wire [  1:0] decode_inst0_src2_sel_r0;
     wire         decode_inst0_use_rs1_r0;
     wire         decode_inst0_use_rs2_r0;
     wire         decode_inst0_use_rd_r0;
     wire         decode_inst0_write_rd_r0;
     wire [  3:0] decode_inst0_alu_op_r0;
-    wire         decode_inst0_rs_id_r0;
     wire         decode_inst0_illegal_r0;
-    wire         decode_inst0_memacc_r0;
+    wire         decode_inst0_memory_r0;
+    wire         decode_inst0_branch_r0;
+    wire         decode_inst0_simple_r0;
+    wire         decode_inst0_complx_r0;
     wire [  4:0] decode_inst1_rs1_r0;
     wire [  4:0] decode_inst1_rs2_r0;
     wire [  4:0] decode_inst1_rd_r0;
     wire [  1:0] decode_inst1_imm_type_r0;
-    wire [  1:0] decode_inst1_src_a_sel_r0;
-    wire [  1:0] decode_inst1_src_b_sel_r0;
+    wire [  1:0] decode_inst1_src1_sel_r0;
+    wire [  1:0] decode_inst1_src2_sel_r0;
     wire         decode_inst1_use_rs1_r0;
     wire         decode_inst1_use_rs2_r0;
     wire         decode_inst1_use_rd_r0;
     wire         decode_inst1_write_rd_r0;
     wire [  3:0] decode_inst1_alu_op_r0;
-    wire         decode_inst1_rs_id_r0;
     wire         decode_inst1_illegal_r0;
-    wire         decode_inst1_memacc_r0;
+    wire         decode_inst1_memory_r0;
+    wire         decode_inst1_branch_r0;
+    wire         decode_inst1_simple_r0;
+    wire         decode_inst1_complx_r0;
     wire [  4:0] decode_inst2_rs1_r0;
     wire [  4:0] decode_inst2_rs2_r0;
     wire [  4:0] decode_inst2_rd_r0;
     wire [  1:0] decode_inst2_imm_type_r0;
-    wire [  1:0] decode_inst2_src_a_sel_r0;
-    wire [  1:0] decode_inst2_src_b_sel_r0;
+    wire [  1:0] decode_inst2_src1_sel_r0;
+    wire [  1:0] decode_inst2_src2_sel_r0;
     wire         decode_inst2_use_rs1_r0;
     wire         decode_inst2_use_rs2_r0;
     wire         decode_inst2_use_rd_r0;
     wire         decode_inst2_write_rd_r0;
     wire [  3:0] decode_inst2_alu_op_r0;
-    wire         decode_inst2_rs_id_r0;
     wire         decode_inst2_illegal_r0;
-    wire         decode_inst2_memacc_r0;
+    wire         decode_inst2_memory_r0;
+    wire         decode_inst2_branch_r0;
+    wire         decode_inst2_simple_r0;
+    wire         decode_inst2_complx_r0;
     wire [  4:0] decode_inst3_rs1_r0;
     wire [  4:0] decode_inst3_rs2_r0;
     wire [  4:0] decode_inst3_rd_r0;
     wire [  1:0] decode_inst3_imm_type_r0;
-    wire [  1:0] decode_inst3_src_a_sel_r0;
-    wire [  1:0] decode_inst3_src_b_sel_r0;
+    wire [  1:0] decode_inst3_src1_sel_r0;
+    wire [  1:0] decode_inst3_src2_sel_r0;
     wire         decode_inst3_use_rs1_r0;
     wire         decode_inst3_use_rs2_r0;
     wire         decode_inst3_use_rd_r0;
     wire         decode_inst3_write_rd_r0;
     wire [  3:0] decode_inst3_alu_op_r0;
-    wire         decode_inst3_rs_id_r0;
     wire         decode_inst3_illegal_r0;
-    wire         decode_inst3_memacc_r0;
+    wire         decode_inst3_memory_r0;
+    wire         decode_inst3_branch_r0;
+    wire         decode_inst3_simple_r0;
+    wire         decode_inst3_complx_r0;
     wire         decode_instbuf_full_d0;
     wire         decode_instbuf_empty_d0;
     wire         rename_specrfl_stall;
@@ -214,58 +222,67 @@ ace_decode i_ace_decode(
     .inst0_rs2_r0_o            (decode_inst0_rs2_r0 ),
     .inst0_rd_r0_o             (decode_inst0_rd_r0 ),
     .inst0_imm_type_r0_o       (decode_inst0_imm_type_r0 ),
-    .inst0_src_a_sel_r0_o      (decode_inst0_src_a_sel_r0 ),
-    .inst0_src_b_sel_r0_o      (decode_inst0_src_b_sel_r0 ),
+    .inst0_src1_sel_r0_o      (decode_inst0_src1_sel_r0 ),
+    .inst0_src2_sel_r0_o      (decode_inst0_src2_sel_r0 ),
     .inst0_use_rs1_r0_o        (decode_inst0_use_rs1_r0 ),
     .inst0_use_rs2_r0_o        (decode_inst0_use_rs2_r0 ),
     .inst0_use_rd_r0_o         (decode_inst0_use_rd_r0 ),
     .inst0_write_rd_r0_o       (decode_inst0_write_rd_r0 ),
     .inst0_alu_op_r0_o         (decode_inst0_alu_op_r0 ),
-    .inst0_rs_id_r0_o          (decode_inst0_rs_id_r0 ),
     .inst0_illegal_r0_o        (decode_inst0_illegal_r0 ),
-    .inst0_memacc_r0_o         (decode_inst0_memacc_r0 ),
+    .inst0_memory_r0_o         (decode_inst0_memory_r0 ),
+    .inst0_branch_r0_o         (decode_inst0_branch_r0 ),
+    .inst0_simple_r0_o         (decode_inst0_simple_r0 ),
+    .inst0_complx_r0_o         (decode_inst0_complx_r0 ),
     .inst1_rs1_r0_o            (decode_inst1_rs1_r0 ),
     .inst1_rs2_r0_o            (decode_inst1_rs2_r0 ),
     .inst1_rd_r0_o             (decode_inst1_rd_r0 ),
     .inst1_imm_type_r0_o       (decode_inst1_imm_type_r0 ),
-    .inst1_src_a_sel_r0_o      (decode_inst1_src_a_sel_r0 ),
-    .inst1_src_b_sel_r0_o      (decode_inst1_src_b_sel_r0 ),
+    .inst1_src1_sel_r0_o      (decode_inst1_src1_sel_r0 ),
+    .inst1_src2_sel_r0_o      (decode_inst1_src2_sel_r0 ),
     .inst1_use_rs1_r0_o        (decode_inst1_use_rs1_r0 ),
     .inst1_use_rs2_r0_o        (decode_inst1_use_rs2_r0 ),
     .inst1_use_rd_r0_o         (decode_inst1_use_rd_r0 ),
     .inst1_write_rd_r0_o       (decode_inst1_write_rd_r0 ),
     .inst1_alu_op_r0_o         (decode_inst1_alu_op_r0 ),
-    .inst1_rs_id_r0_o          (decode_inst1_rs_id_r0 ),
     .inst1_illegal_r0_o        (decode_inst1_illegal_r0 ),
-    .inst1_memacc_r0_o         (decode_inst1_memacc_r0 ),
+    .inst1_memory_r0_o         (decode_inst1_memory_r0 ),
+    .inst1_branch_r0_o         (decode_inst1_branch_r0 ),
+    .inst1_simple_r0_o         (decode_inst1_simple_r0 ),
+    .inst1_complx_r0_o         (decode_inst1_complx_r0 ),
     .inst2_rs1_r0_o            (decode_inst2_rs1_r0 ),
     .inst2_rs2_r0_o            (decode_inst2_rs2_r0 ),
     .inst2_rd_r0_o             (decode_inst2_rd_r0 ),
     .inst2_imm_type_r0_o       (decode_inst2_imm_type_r0 ),
-    .inst2_src_a_sel_r0_o      (decode_inst2_src_a_sel_r0 ),
-    .inst2_src_b_sel_r0_o      (decode_inst2_src_b_sel_r0 ),
+    .inst2_src1_sel_r0_o      (decode_inst2_src1_sel_r0 ),
+    .inst2_src2_sel_r0_o      (decode_inst2_src2_sel_r0 ),
     .inst2_use_rs1_r0_o        (decode_inst2_use_rs1_r0 ),
     .inst2_use_rs2_r0_o        (decode_inst2_use_rs2_r0 ),
     .inst2_use_rd_r0_o         (decode_inst2_use_rd_r0 ),
     .inst2_write_rd_r0_o       (decode_inst2_write_rd_r0 ),
     .inst2_alu_op_r0_o         (decode_inst2_alu_op_r0 ),
-    .inst2_rs_id_r0_o          (decode_inst2_rs_id_r0 ),
     .inst2_illegal_r0_o        (decode_inst2_illegal_r0 ),
-    .inst2_memacc_r0_o         (decode_inst2_memacc_r0 ),
+    .inst2_memory_r0_o         (decode_inst2_memory_r0 ),
+    .inst2_branch_r0_o         (decode_inst2_branch_r0 ),
+    .inst2_simple_r0_o         (decode_inst2_simple_r0 ),
+    .inst2_complx_r0_o         (decode_inst2_complx_r0 ),
+
     .inst3_rs1_r0_o            (decode_inst3_rs1_r0 ),
     .inst3_rs2_r0_o            (decode_inst3_rs2_r0 ),
     .inst3_rd_r0_o             (decode_inst3_rd_r0 ),
     .inst3_imm_type_r0_o       (decode_inst3_imm_type_r0 ),
-    .inst3_src_a_sel_r0_o      (decode_inst3_src_a_sel_r0 ),
-    .inst3_src_b_sel_r0_o      (decode_inst3_src_b_sel_r0 ),
+    .inst3_src1_sel_r0_o       (decode_inst3_src1_sel_r0 ),
+    .inst3_src2_sel_r0_o       (decode_inst3_src2_sel_r0 ),
     .inst3_use_rs1_r0_o        (decode_inst3_use_rs1_r0 ),
     .inst3_use_rs2_r0_o        (decode_inst3_use_rs2_r0 ),
     .inst3_use_rd_r0_o         (decode_inst3_use_rd_r0 ),
     .inst3_write_rd_r0_o       (decode_inst3_write_rd_r0 ),
     .inst3_alu_op_r0_o         (decode_inst3_alu_op_r0 ),
-    .inst3_rs_id_r0_o          (decode_inst3_rs_id_r0 ),
     .inst3_illegal_r0_o        (decode_inst3_illegal_r0 ),
-    .inst3_memacc_r0_o         (decode_inst3_memacc_r0 ),
+    .inst3_memory_r0_o         (decode_inst3_memory_r0 ),
+    .inst3_branch_r0_o         (decode_inst3_branch_r0 ),
+    .inst3_simple_r0_o         (decode_inst3_simple_r0 ),
+    .inst3_complx_r0_o         (decode_inst3_complx_r0 ),
     .instbuf_full_d0_o         (decode_instbuf_full_d0          ),
     .instbuf_empty_d0_o        (decode_instbuf_empty_d0         )
 );
@@ -296,10 +313,10 @@ ace_rename i_ace_rename(
     .decode_inst1useRd_i        (decode_inst1_use_rd_r0  ),
     .decode_inst2useRd_i        (decode_inst2_use_rd_r0  ),
     .decode_inst3useRd_i        (decode_inst3_use_rd_r0  ),
-    .decode_inst0memacc_i       (decode_inst0_memacc_r0  ),
-    .decode_inst1memacc_i       (decode_inst1_memacc_r0  ),
-    .decode_inst2memacc_i       (decode_inst2_memacc_r0  ),
-    .decode_inst3memacc_i       (decode_inst3_memacc_r0  ),
+    .decode_inst0memory_i       (decode_inst0_memory_r0  ),
+    .decode_inst1memory_i       (decode_inst1_memory_r0  ),
+    .decode_inst2memory_i       (decode_inst2_memory_r0  ),
+    .decode_inst3memory_i       (decode_inst3_memory_r0  ),
  
     .retire_lfst_invld0_i       (retire_lfst_invld0    ),
     .retire_lfst_invld1_i       (retire_lfst_invld1    ),

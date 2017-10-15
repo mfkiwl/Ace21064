@@ -118,16 +118,16 @@
 `define IMM_U                  2'd2
 `define IMM_J                  2'd3
 
-//src_a
-`define SRC_A_RS1              2'd0
-`define SRC_A_PC               2'd1
-`define SRC_A_ZERO             2'd2
+//src1
+`define SRC1_RS1              2'd0
+`define SRC1_PC               2'd1
+`define SRC1_ZERO             2'd2
 
-//src_b
-`define SRC_B_RS2              2'd0
-`define SRC_B_IMM              2'd1
-`define SRC_B_FOUR             2'd2
-`define SRC_B_ZERO             2'd3
+//src2
+`define SRC2_RS2              2'd0
+`define SRC2_IMM              2'd1
+`define SRC2_FOUR             2'd2
+`define SRC2_ZERO             2'd3
 
 `define MD_OP_MUL              2'd0
 `define MD_OP_DIV              2'd1

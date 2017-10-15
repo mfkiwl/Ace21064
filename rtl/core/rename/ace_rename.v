@@ -35,10 +35,10 @@ module ace_rename(
     input wire        decode_inst1useRd_i,
     input wire        decode_inst2useRd_i,
     input wire        decode_inst3useRd_i,
-    input wire        decode_inst0memacc_i,
-    input wire        decode_inst1memacc_i,
-    input wire        decode_inst2memacc_i,
-    input wire        decode_inst3memacc_i,
+    input wire        decode_inst0memory_i,
+    input wire        decode_inst1memory_i,
+    input wire        decode_inst2memory_i,
+    input wire        decode_inst3memory_i,
 
     input wire        retire_lfst_invld0_i,
     input wire        retire_lfst_invld1_i,
@@ -206,15 +206,6 @@ module ace_rename(
     reg  [1:0]     depchkssit_inst2ssidsel_r1;
     reg  [1:0]     depchkssit_inst3ssidsel_r1;
     
-    reg            decode_inst0writeRd_r1;
-    reg            decode_inst1writeRd_r1;
-    reg            decode_inst2writeRd_r1;
-    reg            decode_inst3writeRd_r1;
-    reg            decode_inst0memAcc_r1;
-    reg            decode_inst1memAcc_r1;
-    reg            decode_inst2memAcc_r1;
-    reg            decode_inst3memAcc_r1;
-
     reg            inst0_st_vld_r1;
     reg            inst1_st_vld_r1;
     reg            inst2_st_vld_r1;
@@ -224,14 +215,14 @@ module ace_rename(
     reg            inst2_ld_vld_r1;
     reg            inst3_ld_vld_r1;
 
-    wire inst0_st_vld = !decode_inst0writeRd_i & decode_inst0memacc_i;
-    wire inst1_st_vld = !decode_inst1writeRd_i & decode_inst1memacc_i;
-    wire inst2_st_vld = !decode_inst2writeRd_i & decode_inst2memacc_i;
-    wire inst3_st_vld = !decode_inst3writeRd_i & decode_inst3memacc_i;
-    wire inst0_ld_vld =  decode_inst0writeRd_i & decode_inst0memacc_i;
-    wire inst1_ld_vld =  decode_inst1writeRd_i & decode_inst1memacc_i;
-    wire inst2_ld_vld =  decode_inst2writeRd_i & decode_inst2memacc_i;
-    wire inst3_ld_vld =  decode_inst3writeRd_i & decode_inst3memacc_i;
+    wire inst0_st_vld = !decode_inst0writeRd_i & decode_inst0memory_i;
+    wire inst1_st_vld = !decode_inst1writeRd_i & decode_inst1memory_i;
+    wire inst2_st_vld = !decode_inst2writeRd_i & decode_inst2memory_i;
+    wire inst3_st_vld = !decode_inst3writeRd_i & decode_inst3memory_i;
+    wire inst0_ld_vld =  decode_inst0writeRd_i & decode_inst0memory_i;
+    wire inst1_ld_vld =  decode_inst1writeRd_i & decode_inst1memory_i;
+    wire inst2_ld_vld =  decode_inst2writeRd_i & decode_inst2memory_i;
+    wire inst3_ld_vld =  decode_inst3writeRd_i & decode_inst3memory_i;
 
     wire [6:0] rename_inst0rs1phys_r1;
     wire [6:0] rename_inst1rs1phys_r1;
