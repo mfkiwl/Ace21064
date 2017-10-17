@@ -72,18 +72,27 @@ module ace_rename(
     input wire        l1dcache_ssitwe_i,
 
     output wire        rename_specrfl_stall_o,
-    output wire  [6:0] rename_inst0rs1phys_i0_o,
-    output wire  [6:0] rename_inst1rs1phys_i0_o,
-    output wire  [6:0] rename_inst2rs1phys_i0_o,
-    output wire  [6:0] rename_inst3rs1phys_i0_o,
-    output wire  [6:0] rename_inst0rs2phys_i0_o,
-    output wire  [6:0] rename_inst1rs2phys_i0_o,
-    output wire  [6:0] rename_inst2rs2phys_i0_o,
-    output wire  [6:0] rename_inst3rs2phys_i0_o,
-    output wire  [6:0] rename_inst0rdphys_i0_o,
-    output wire  [6:0] rename_inst1rdphys_i0_o,
-    output wire  [6:0] rename_inst2rdphys_i0_o,
-    output wire  [6:0] rename_inst3rdphys_i0_o
+    output reg  [6:0] rename_inst0rs1phys_d0_o,
+    output reg  [6:0] rename_inst1rs1phys_d0_o,
+    output reg  [6:0] rename_inst2rs1phys_d0_o,
+    output reg  [6:0] rename_inst3rs1phys_d0_o,
+    output reg  [6:0] rename_inst0rs2phys_d0_o,
+    output reg  [6:0] rename_inst1rs2phys_d0_o,
+    output reg  [6:0] rename_inst2rs2phys_d0_o,
+    output reg  [6:0] rename_inst3rs2phys_d0_o,
+    output reg  [6:0] rename_inst0rdphys_d0_o,
+    output reg  [6:0] rename_inst1rdphys_d0_o,
+    output reg  [6:0] rename_inst2rdphys_d0_o,
+    output reg  [6:0] rename_inst3rdphys_d0_o,
+
+    output reg        rename_inst0stvld_d0_o,
+    output reg        rename_inst1stvld_d0_o,
+    output reg        rename_inst2stvld_d0_o,
+    output reg        rename_inst3stvld_d0_o,
+    output reg        rename_inst0stvld_d0_o,
+    output reg        rename_inst1stvld_d0_o,
+    output reg        rename_inst2stvld_d0_o,
+    output reg        rename_inst3stvld_d0_o
 
 );
 
@@ -625,38 +634,54 @@ assign rename_inst1oldrdphys_r1 = inst1_st_vld_r1 ? specrfl_inst1freereg_r1 : ma
 assign rename_inst2oldrdphys_r1 = inst2_st_vld_r1 ? specrfl_inst2freereg_r1 : map_inst2_rdphys;
 assign rename_inst3oldrdphys_r1 = inst3_st_vld_r1 ? specrfl_inst3freereg_r1 : map_inst3_rdphys;
 
-// pipe stage registers
+// pipe stage registers between rename and dispatch
 always @ (posedge clock or negedge reset_n)
 begin
     if(!reset_n)
     begin
-        rename_inst0rs1phys_i0_o <= 'b0;
-        rename_inst1rs1phys_i0_o <= 'b0;
-        rename_inst2rs1phys_i0_o <= 'b0;
-        rename_inst3rs1phys_i0_o <= 'b0;
-        rename_inst0rs2phys_i0_o <= 'b0;
-        rename_inst1rs2phys_i0_o <= 'b0;
-        rename_inst2rs2phys_i0_o <= 'b0;
-        rename_inst3rs2phys_i0_o <= 'b0;
-        rename_inst0rdphys_i0_o  <= 'b0;
-        rename_inst1rdphys_i0_o  <= 'b0;
-        rename_inst2rdphys_i0_o  <= 'b0;
-        rename_inst3rdphys_i0_o  <= 'b0;
+        rename_inst0rs1phys_d0_o <= 7'b0;
+        rename_inst1rs1phys_d0_o <= 7'b0;
+        rename_inst2rs1phys_d0_o <= 7'b0;
+        rename_inst3rs1phys_d0_o <= 7'b0;
+        rename_inst0rs2phys_d0_o <= 7'b0;
+        rename_inst1rs2phys_d0_o <= 7'b0;
+        rename_inst2rs2phys_d0_o <= 7'b0;
+        rename_inst3rs2phys_d0_o <= 7'b0;
+        rename_inst0rdphys_d0_o  <= 7'b0;
+        rename_inst1rdphys_d0_o  <= 7'b0;
+        rename_inst2rdphys_d0_o  <= 7'b0;
+        rename_inst3rdphys_d0_o  <= 7'b0;
+        rename_inst0stvld_d0_o   <= 1'b0;
+        rename_inst1stvld_d0_o   <= 1'b0;
+        rename_inst2stvld_d0_o   <= 1'b0;
+        rename_inst3stvld_d0_o   <= 1'b0;
+        rename_inst0ldvld_d0_o   <= 1'b0;
+        rename_inst1ldvld_d0_o   <= 1'b0;
+        rename_inst2ldvld_d0_o   <= 1'b0;
+        rename_inst3ldvld_d0_o   <= 1'b0;
     end
     else if(pipe_load_rename_i)
     begin
-        rename_inst0rs1phys_i0_o <= rename_inst0rs1phys_r1;
-        rename_inst1rs1phys_i0_o <= rename_inst1rs1phys_r1;
-        rename_inst2rs1phys_i0_o <= rename_inst2rs1phys_r1;
-        rename_inst3rs1phys_i0_o <= rename_inst3rs1phys_r1;
-        rename_inst0rs2phys_i0_o <= rename_inst0rs2phys_r1;
-        rename_inst1rs2phys_i0_o <= rename_inst1rs2phys_r1;
-        rename_inst2rs2phys_i0_o <= rename_inst2rs2phys_r1;
-        rename_inst3rs2phys_i0_o <= rename_inst3rs2phys_r1;
-        rename_inst0rdphys_i0_o  <= rename_inst0oldrdphys_r1;
-        rename_inst1rdphys_i0_o  <= rename_inst1oldrdphys_r1;
-        rename_inst2rdphys_i0_o  <= rename_inst2oldrdphys_r1;
-        rename_inst3rdphys_i0_o  <= rename_inst3oldrdphys_r1;
+        rename_inst0rs1phys_d0_o <= rename_inst0rs1phys_r1;
+        rename_inst1rs1phys_d0_o <= rename_inst1rs1phys_r1;
+        rename_inst2rs1phys_d0_o <= rename_inst2rs1phys_r1;
+        rename_inst3rs1phys_d0_o <= rename_inst3rs1phys_r1;
+        rename_inst0rs2phys_d0_o <= rename_inst0rs2phys_r1;
+        rename_inst1rs2phys_d0_o <= rename_inst1rs2phys_r1;
+        rename_inst2rs2phys_d0_o <= rename_inst2rs2phys_r1;
+        rename_inst3rs2phys_d0_o <= rename_inst3rs2phys_r1;
+        rename_inst0rdphys_d0_o  <= rename_inst0oldrdphys_r1;
+        rename_inst1rdphys_d0_o  <= rename_inst1oldrdphys_r1;
+        rename_inst2rdphys_d0_o  <= rename_inst2oldrdphys_r1;
+        rename_inst3rdphys_d0_o  <= rename_inst3oldrdphys_r1;
+        rename_inst0stvld_d0_o   <= inst0_st_vld_r1;
+        rename_inst1stvld_d0_o   <= inst1_st_vld_r1;
+        rename_inst2stvld_d0_o   <= inst2_st_vld_r1;
+        rename_inst3stvld_d0_o   <= inst3_st_vld_r1;
+        rename_inst0ldvld_d0_o   <= inst0_ld_vld_r1;
+        rename_inst1ldvld_d0_o   <= inst1_ld_vld_r1;
+        rename_inst2ldvld_d0_o   <= inst2_ld_vld_r1;
+        rename_inst3ldvld_d0_o   <= inst3_ld_vld_r1;
     end
 end
 

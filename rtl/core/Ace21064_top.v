@@ -143,18 +143,27 @@ module Ace21064_top(
     wire         decode_instbuf_full_d0;
     wire         decode_instbuf_empty_d0;
     wire         rename_specrfl_stall;
-    wire [  6:0] rename_inst0rs1phys_i0;
-    wire [  6:0] rename_inst1rs1phys_i0;
-    wire [  6:0] rename_inst2rs1phys_i0;
-    wire [  6:0] rename_inst3rs1phys_i0;
-    wire [  6:0] rename_inst0rs2phys_i0;
-    wire [  6:0] rename_inst1rs2phys_i0;
-    wire [  6:0] rename_inst2rs2phys_i0;
-    wire [  6:0] rename_inst3rs2phys_i0;
-    wire [  6:0] rename_inst0rdphys_i0;
-    wire [  6:0] rename_inst1rdphys_i0;
-    wire [  6:0] rename_inst2rdphys_i0;
-    wire [  6:0] rename_inst3rdphys_i0;
+    wire [  6:0] rename_inst0rs1phys_d0;
+    wire [  6:0] rename_inst1rs1phys_d0;
+    wire [  6:0] rename_inst2rs1phys_d0;
+    wire [  6:0] rename_inst3rs1phys_d0;
+    wire [  6:0] rename_inst0rs2phys_d0;
+    wire [  6:0] rename_inst1rs2phys_d0;
+    wire [  6:0] rename_inst2rs2phys_d0;
+    wire [  6:0] rename_inst3rs2phys_d0;
+    wire [  6:0] rename_inst0rdphys_d0;
+    wire [  6:0] rename_inst1rdphys_d0;
+    wire [  6:0] rename_inst2rdphys_d0;
+    wire [  6:0] rename_inst3rdphys_d0;
+    wire         rename_inst0stvld_d0;
+    wire         rename_inst1stvld_d0;
+    wire         rename_inst2stvld_d0;
+    wire         rename_inst3stvld_d0;
+    wire         rename_inst0ldvld_d0;
+    wire         rename_inst1ldvld_d0;
+    wire         rename_inst2ldvld_d0;
+    wire         rename_inst3ldvld_d0;
+
 
 
 
@@ -350,18 +359,26 @@ ace_rename i_ace_rename(
     .l1dcache_ssitwe_i          (l1dcache_ssitwe      ),
 
     .rename_specrfl_stall_o     (rename_specrfl_stall    ),
-    .rename_inst0rs1phys_i0_o   (rename_inst0rs1phys_i0  ),
-    .rename_inst1rs1phys_i0_o   (rename_inst1rs1phys_i0  ),
-    .rename_inst2rs1phys_i0_o   (rename_inst2rs1phys_i0  ),
-    .rename_inst3rs1phys_i0_o   (rename_inst3rs1phys_i0  ),
-    .rename_inst0rs2phys_i0_o   (rename_inst0rs2phys_i0  ),
-    .rename_inst1rs2phys_i0_o   (rename_inst1rs2phys_i0  ),
-    .rename_inst2rs2phys_i0_o   (rename_inst2rs2phys_i0  ),
-    .rename_inst3rs2phys_i0_o   (rename_inst3rs2phys_i0  ),
-    .rename_inst0rdphys_i0_o    (rename_inst0rdphys_i0),
-    .rename_inst1rdphys_i0_o    (rename_inst1rdphys_i0),
-    .rename_inst2rdphys_i0_o    (rename_inst2rdphys_i0),
-    .rename_inst3rdphys_i0_o    (rename_inst3rdphys_i0)
+    .rename_inst0rs1phys_i0_o   (rename_inst0rs1phys_d0  ),
+    .rename_inst1rs1phys_i0_o   (rename_inst1rs1phys_d0  ),
+    .rename_inst2rs1phys_i0_o   (rename_inst2rs1phys_d0  ),
+    .rename_inst3rs1phys_i0_o   (rename_inst3rs1phys_d0  ),
+    .rename_inst0rs2phys_i0_o   (rename_inst0rs2phys_d0  ),
+    .rename_inst1rs2phys_i0_o   (rename_inst1rs2phys_d0  ),
+    .rename_inst2rs2phys_i0_o   (rename_inst2rs2phys_d0  ),
+    .rename_inst3rs2phys_i0_o   (rename_inst3rs2phys_d0  ),
+    .rename_inst0rdphys_i0_o    (rename_inst0rdphys_d0),
+    .rename_inst1rdphys_i0_o    (rename_inst1rdphys_d0),
+    .rename_inst2rdphys_i0_o    (rename_inst2rdphys_d0),
+    .rename_inst3rdphys_i0_o    (rename_inst3rdphys_d0),
+    .rename_inst0stvld_d0_o     (rename_inst0stvld_d0),
+    .rename_inst1stvld_d0_o     (rename_inst1stvld_d0),
+    .rename_inst2stvld_d0_o     (rename_inst2stvld_d0),
+    .rename_inst3stvld_d0_o     (rename_inst3stvld_d0),
+    .rename_inst0ldvld_d0_o     (rename_inst0ldvld_d0),
+    .rename_inst1ldvld_d0_o     (rename_inst1ldvld_d0),
+    .rename_inst2ldvld_d0_o     (rename_inst2ldvld_d0),
+    .rename_inst3ldvld_d0_o     (rename_inst3ldvld_d0)
 );
 
 // two pipeline stages in issue, signals in these stages are suffixed with
