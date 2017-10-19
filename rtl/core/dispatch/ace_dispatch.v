@@ -113,7 +113,27 @@ assign rob_stall  = ((retire_rob_cnt_i  + 4) > `ROB_DEPTH);
 
 assign dispatch_frotend_stl_o = ld_stall | st_stall | rs0_stall | rs1_stall | rob_stall;
 
+// reorder buffer contains following information:
+// 0     - valid bit
+//       - 
+assign dispatch_rob_wdata0_o =  
+assign dispatch_rob_wdata1_o = 
+assign dispatch_rob_wdata2_o = 
+assign dispatch_rob_wdata3_o = 
 
+assign dispatch_rs0_wdata0_o = 
+assign dispatch_rs0_wdata1_o = 
+assign dispatch_rs0_wdata2_o = 
+assign dispatch_rs0_wdata3_o = 
+assign dispatch_rs1_wdata0_o = 
+assign dispatch_rs1_wdata1_o = 
+assign dispatch_rs1_wdata2_o = 
+assign dispatch_rs1_wdata3_o = 
+
+assign dispatch_lsq_wdata0_o = 
+assign dispatch_lsq_wdata1_o = 
+assign dispatch_lsq_wdata2_o = 
+assign dispatch_lsq_wdata3_o = 
 
 
 endmodule
