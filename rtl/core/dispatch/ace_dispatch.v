@@ -115,11 +115,37 @@ assign dispatch_frotend_stl_o = ld_stall | st_stall | rs0_stall | rs1_stall | ro
 
 // reorder buffer contains following information:
 // 0     - valid bit
-//       - 
+// 1     - ret_inst
+// 2     - syscall_inst
+// 3     - csr_inst
+// 4     - store_inst
+// 5     - load_inst
+//       - phys_rs1
+//       - phys_rs2
+//       - phys_rd 
+//       - pc
+//       - exception
 assign dispatch_rob_wdata0_o =  
 assign dispatch_rob_wdata1_o = 
 assign dispatch_rob_wdata2_o = 
 assign dispatch_rob_wdata3_o = 
+
+// reservation station data contains following information:
+// 0     - valid bit
+//       - rs_id 
+//         lsq_id
+//         rob_id
+//         checkpoint_id
+//         
+//       - phys_rs1
+//         phys_rs2
+//         phys_rd
+//         imm
+//         ls_typ
+//         opcode
+//         pc
+//         predicted target addr
+//         branch prediction
 
 assign dispatch_rs0_wdata0_o = 
 assign dispatch_rs0_wdata1_o = 
@@ -130,6 +156,10 @@ assign dispatch_rs1_wdata1_o =
 assign dispatch_rs1_wdata2_o = 
 assign dispatch_rs1_wdata3_o = 
 
+// load strore queue data contains following information:
+//         valid
+//         store_inst
+//         load_inst
 assign dispatch_lsq_wdata0_o = 
 assign dispatch_lsq_wdata1_o = 
 assign dispatch_lsq_wdata2_o = 
