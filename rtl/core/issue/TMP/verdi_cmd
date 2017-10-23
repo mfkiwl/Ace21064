@@ -1,1 +1,1 @@
-Verdi -f ../Ace21064_issue.f &
+Verdi -debug_all -sverilog +v2k -full64 -f ../Ace21064_issue.f &
