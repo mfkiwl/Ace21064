@@ -1,0 +1,9 @@
+debImport "-f" "../Ace21064_issue.f"
+verdiDockWidgetDisplay -dock widgetDock_WelcomePage
+verdiDockWidgetHide -dock widgetDock_WelcomePage
+srcHBSelect "ace_issue.select0.U0_3.encoder" -win $_nTrace1
+srcSetScope -win $_nTrace1 "ace_issue.select0.U0_3.encoder" -delim "."
+nsMsgSelect -range {0 1-1}
+debReload
+nsMsgSelect -range {0 1-1}
+debExit

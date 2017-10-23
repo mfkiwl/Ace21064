@@ -1,0 +1,43 @@
+@Verdi rc file Version 1.0
+[General]
+VerdiVersion = Verdi3_I-2014.03
+[KeyNote]
+Line1 = Automatic Backup 0
+[TestBench]
+ConstrViewShow = 0
+InherViewShow = 0
+FSDBMsgShow = 0
+AnnotationShow = 0
+[hb]
+viewport = 422 244 900 700 294 449 57 898
+activeNode = "encoder"
+activeScope = "encoder"
+activeFile = "/home/ejune/GitRepos/Ace21064/rtl/core/issue/encoder.v"
+interactiveMode = False
+viewType = Source
+simulatorMode = False
+sourceBeginLine = 0
+baMode = False
+srcLineNum = True
+syncSignal = False
+traceMode = Hierarchical
+showTraceInSchema = True
+paMode = False
+funcMode = False
+traceCrossHier = True
+DnDtraceCrossHierOnly = True
+traceIncTopPort = False
+leadingZero = False
+signalPane = False
+Scope1 = "encoder"
+multipleSelection = 1 0 2 0 0
+sdfCheckUndef = FALSE
+[hb.sourceTab.1]
+scope = encoder
+File = /home/ejune/GitRepos/Ace21064/rtl/core/issue/encoder.v
+Line = 1
+[imp.design1]
+dbEnum =  oh
+invokeDir = /home/ejune/GitRepos/Ace21064/rtl/core/issue/TMP
+design = DebussyLib
+hostCommand = hostCommand -f ../Ace21064_issue.f
